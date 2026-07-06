@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from app.features.auth.application.ports import TokenRepositoryPort, UserRepositoryPort
+
+
+class UnitOfWorkPort(Protocol):
+    user_repo: "UserRepositoryPort"
+    refresh_token_repo: "TokenRepositoryPort"
+
+    async def __aenter__(self) -> "UnitOfWorkPort": ...
+    async def __aexit__(self, exc_type, exc, tb) -> None: ...
+    async def commit(self) -> None: ...
+    async def rollback(self) -> None: ...
