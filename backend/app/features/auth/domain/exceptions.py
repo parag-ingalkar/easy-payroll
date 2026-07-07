@@ -23,14 +23,30 @@ class UserAlreadyExists(AuthError):
 class InvalidTokenError(AuthError):
     """Raised when the provided token is invalid or expired."""
 
-    def __init__(self, message="Invalid or expired token."):
+    def __init__(self, message="Invalid or expired refresh token."):
         self.message = message
         super().__init__(self.message)
 
 
-class InsufficientPermissionsError(AuthError):
-    """Raised when a user does not have the required permissions."""
+class TokenRevokedError(AuthError):
+    """Raised when the provided token has been revoked."""
 
-    def __init__(self, message="Insufficient permissions."):
+    def __init__(self, message="Refresh token has been revoked."):
+        self.message = message
+        super().__init__(self.message)
+
+
+class TokenExpiredError(AuthError):
+    """Raised when the provided token has expired."""
+
+    def __init__(self, message="Refresh token has expired."):
+        self.message = message
+        super().__init__(self.message)
+
+
+class MissingTokenError(AuthError):
+    """Raised when the provided token has expired."""
+
+    def __init__(self, message="Refresh token has expired."):
         self.message = message
         super().__init__(self.message)

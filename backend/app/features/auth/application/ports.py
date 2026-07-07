@@ -2,7 +2,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.features.auth.domain.entities import RefreshToken, User
-from app.features.auth.domain.value_objects import AccessToken
+from app.features.auth.domain.value_objects import AccessToken, RefreshTokenClaims
 
 
 class PasswordHasherPort(Protocol):
@@ -22,6 +22,10 @@ class TokenServicePort(Protocol):
 
     def encode_refresh_token(self, refresh_token: RefreshToken) -> str:
         """Creates a refresh token and returns it along with its JTI and expiration datetime."""
+        ...
+
+    def decode_refresh_token(self, token: str) -> RefreshTokenClaims | None:
+        """Decodes the given refresh token and returns its claims."""
         ...
 
 

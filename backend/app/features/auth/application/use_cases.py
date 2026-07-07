@@ -1,15 +1,18 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from uuid import uuid4
 
 from app.features.auth.application.commands import (
     CreateUserCommand,
     LoginUserCommand,
+    LogoutUserCommand,
+    RefreshTokenCommand,
 )
 from app.features.auth.application.ports import PasswordHasherPort, TokenServicePort
 from app.features.auth.domain.entities import RefreshToken, User
 from app.features.auth.domain.exceptions import (
     InvalidCredentialsError,
+    InvalidTokenError,
+    TokenExpiredError,
+    TokenRevokedError,
     UserAlreadyExists,
 )
 from app.features.auth.domain.value_objects import AccessToken, UserRole
@@ -34,14 +37,10 @@ class CreateUserUseCase:
             if existing_user:
                 raise UserAlreadyExists("Email already in use.")
 
-            now_ = datetime.now(UTC)
-            new_user = User(
-                id=uuid4(),
-                email=command.email.lower(),
+            new_user = User.create(
+                email=command.email,
                 hashed_password=self.password_hasher.hash(command.password),
                 name=command.name,
-                created_at=now_,
-                updated_at=now_,
                 roles=[UserRole.OWNER],
             )
 
@@ -76,3 +75,68 @@ class LoginUseCase:
                 refresh_token=refresh_token,
                 expires_in=access_token_entity.expires_in,
             )
+
+
+@dataclass()
+class RefreshTokenUseCase:
+    uow: "UnitOfWorkPort"
+    token_service: "TokenServicePort"
+
+    async def execute(self, command: RefreshTokenCommand) -> TokenResponseDTO:
+        claims = self.token_service.decode_refresh_token(command.refresh_token)
+        print(f"Decoded claims: {claims}")  # Debugging line
+        print(f"Refresh token: {command.refresh_token}")  # Debugging line
+        if claims is None:
+            raise InvalidTokenError("Invalid refresh token")
+
+        async with self.uow as uow:
+            refresh_token = await uow.refresh_token_repo.get_by_jti(claims.jti)
+            if refresh_token is None or refresh_token.user_id != claims.user_id:
+                raise InvalidTokenError("Invalid refresh token.")
+            if not refresh_token.can_refresh():
+                raise (
+                    TokenRevokedError("Refresh token has been revoked.")
+                    if refresh_token.revoked
+                    else TokenExpiredError("Refresh token has expired.")
+                )
+
+            user = await uow.user_repo.get_by_id(claims.user_id)
+            if not user:
+                raise InvalidTokenError("User associated with the refresh token not found.")
+
+            refresh_token.revoke()
+            await uow.refresh_token_repo.revoke(refresh_token)
+
+            new_access_token_entity = AccessToken.create(user.id, user.roles)
+            new_refresh_token_entity = RefreshToken.create(user.id)
+
+            new_access_token = self.token_service.encode_access_token(new_access_token_entity)
+            new_refresh_token = self.token_service.encode_refresh_token(new_refresh_token_entity)
+
+            await uow.refresh_token_repo.add(new_refresh_token_entity)
+            await uow.commit()
+
+            return TokenResponseDTO(
+                access_token=new_access_token,
+                refresh_token=new_refresh_token,
+                expires_in=new_access_token_entity.expires_in,
+            )
+
+
+@dataclass()
+class LogoutUseCase:
+    uow: "UnitOfWorkPort"
+    token_service: "TokenServicePort"
+
+    async def execute(self, command: LogoutUserCommand) -> None:
+        claims = self.token_service.decode_refresh_token(command.refresh_token)
+        if claims is None:
+            raise InvalidTokenError("Invalid refresh token")
+
+        async with self.uow as uow:
+            refresh_token = await uow.refresh_token_repo.get_by_jti(claims.jti)
+            if refresh_token is not None:
+                print(f"Revoking refresh token: {refresh_token}")  # Debugging line
+                refresh_token.revoke()
+                await uow.refresh_token_repo.revoke(refresh_token)
+                await uow.commit()

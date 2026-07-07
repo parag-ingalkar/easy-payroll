@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import StrEnum
 from uuid import UUID
 
 from app.core.config import get_settings
+from app.shared.utils import get_now
 
 
 class UserRole(StrEnum):
@@ -21,7 +22,7 @@ class AccessToken:
 
     @staticmethod
     def create(user_id: UUID, roles: list[UserRole]):
-        created_at = datetime.now(UTC)
+        created_at = get_now()
         expires_in = get_settings().access_token_expire_minutes * 60
         expires_at = created_at + timedelta(seconds=expires_in)
         return AccessToken(
@@ -31,3 +32,11 @@ class AccessToken:
             expires_at=expires_at,
             expires_in=expires_in,
         )
+
+
+@dataclass(frozen=True)
+class RefreshTokenClaims:
+    user_id: UUID
+    jti: str
+    created_at: datetime
+    expires_at: datetime

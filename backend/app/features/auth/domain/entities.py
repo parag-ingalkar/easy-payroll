@@ -1,10 +1,10 @@
-from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
 from app.core.config import get_settings
-
-from .value_objects import UserRole
+from app.features.auth.domain.value_objects import UserRole
+from app.shared.utils import get_now
 
 
 @dataclass(slots=True, frozen=True)
@@ -17,8 +17,23 @@ class User:
     updated_at: datetime
     roles: list[UserRole] = field(default_factory=lambda: [UserRole.OWNER])
 
+    @staticmethod
+    def create(
+        email: str, hashed_password: str, name: str, roles: list[UserRole] | None = None
+    ) -> "User":
+        now = get_now()
+        return User(
+            id=uuid4(),
+            email=email.lower(),
+            hashed_password=hashed_password,
+            name=name,
+            created_at=now,
+            updated_at=now,
+            roles=roles if roles is not None else [UserRole.OWNER],
+        )
 
-@dataclass(slots=True, frozen=True)
+
+@dataclass(slots=True)
 class RefreshToken:
     id: UUID
     jti: str
@@ -29,7 +44,7 @@ class RefreshToken:
 
     @staticmethod
     def create(user_id: UUID):
-        now = datetime.now(UTC)
+        now = get_now()
         return RefreshToken(
             id=uuid4(),
             jti=str(uuid4()),
@@ -40,12 +55,7 @@ class RefreshToken:
         )
 
     def can_refresh(self) -> bool:
-        return not self.revoked and datetime.now() < self.expires_at
+        return not self.revoked and get_now() < self.expires_at
 
     def revoke(self):
-        return replace(self, revoked=True)
-
-    def rotate(self) -> tuple["RefreshToken", "RefreshToken"]:
-        new_token = RefreshToken.create(self.user_id)
-        revoked_token = self.revoke()
-        return new_token, revoked_token
+        self.revoked = True
