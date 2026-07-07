@@ -13,6 +13,7 @@ from app.features.auth.application.use_cases import (
     LogoutUseCase,
     RefreshTokenUseCase,
 )
+from app.features.auth.domain.entities import User
 from app.features.auth.domain.exceptions import (
     InvalidTokenError,
     MissingTokenError,
@@ -21,6 +22,7 @@ from app.features.auth.domain.exceptions import (
 )
 from app.features.auth.presentation.dependencies import (
     get_create_user_use_case,
+    get_current_user,
     get_login_use_case,
     get_logout_use_case,
     get_refresh_token_use_case,
@@ -33,8 +35,6 @@ from app.features.auth.presentation.schemas import (
     UserResponse,
 )
 
-COOKIE_MAX_AGE = get_settings().refresh_token_expire_days * 24 * 60 * 60
-
 
 def _set_refresh_token_cookie(response: Response, refresh_token: str, *, secure: bool) -> None:
     response.set_cookie(
@@ -43,7 +43,7 @@ def _set_refresh_token_cookie(response: Response, refresh_token: str, *, secure:
         httponly=True,
         secure=secure,
         samesite="lax",
-        max_age=COOKIE_MAX_AGE,
+        max_age=get_settings().refresh_token_expire_days * 24 * 60 * 60,
         path="/api/auth",
     )
 
@@ -101,7 +101,6 @@ async def login(
     return TokenResponse(
         access_token=token_response.access_token,
         refresh_token=token_response.refresh_token,
-        expires_in=token_response.expires_in,
     )
 
 
@@ -133,7 +132,6 @@ async def refresh_token(
     return TokenResponse(
         access_token=token_response.access_token,
         refresh_token=token_response.refresh_token,
-        expires_in=token_response.expires_in,
     )
 
 
@@ -158,3 +156,17 @@ async def logout(
 
     _clear_refresh_token_cookie(response)
     return None
+
+
+@router.get("/users/me", response_model=UserResponse)
+async def current_user(
+    current_user: "User" = Depends(get_current_user),
+):
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at,
+        roles=current_user.roles,
+    )

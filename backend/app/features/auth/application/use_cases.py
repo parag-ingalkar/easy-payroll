@@ -6,9 +6,15 @@ from app.features.auth.application.commands import (
     LogoutUserCommand,
     RefreshTokenCommand,
 )
-from app.features.auth.application.ports import PasswordHasherPort, TokenServicePort
+from app.features.auth.application.ports import (
+    PasswordHasherPort,
+    TokenServicePort,
+    UserRepositoryPort,
+)
 from app.features.auth.domain.entities import RefreshToken, User
 from app.features.auth.domain.exceptions import (
+    AccessTokenExpiredError,
+    InvalidAccessTokenError,
     InvalidCredentialsError,
     InvalidTokenError,
     TokenExpiredError,
@@ -23,10 +29,9 @@ from app.shared.application.uow_port import UnitOfWorkPort
 class TokenResponseDTO:
     access_token: str
     refresh_token: str
-    expires_in: int
 
 
-@dataclass()
+@dataclass
 class CreateUserUseCase:
     uow: UnitOfWorkPort
     password_hasher: PasswordHasherPort
@@ -49,7 +54,7 @@ class CreateUserUseCase:
             return new_user
 
 
-@dataclass()
+@dataclass
 class LoginUseCase:
     uow: "UnitOfWorkPort"
     password_hasher: "PasswordHasherPort"
@@ -73,19 +78,16 @@ class LoginUseCase:
             return TokenResponseDTO(
                 access_token=access_token,
                 refresh_token=refresh_token,
-                expires_in=access_token_entity.expires_in,
             )
 
 
-@dataclass()
+@dataclass
 class RefreshTokenUseCase:
     uow: "UnitOfWorkPort"
     token_service: "TokenServicePort"
 
     async def execute(self, command: RefreshTokenCommand) -> TokenResponseDTO:
         claims = self.token_service.decode_refresh_token(command.refresh_token)
-        print(f"Decoded claims: {claims}")  # Debugging line
-        print(f"Refresh token: {command.refresh_token}")  # Debugging line
         if claims is None:
             raise InvalidTokenError("Invalid refresh token")
 
@@ -119,11 +121,10 @@ class RefreshTokenUseCase:
             return TokenResponseDTO(
                 access_token=new_access_token,
                 refresh_token=new_refresh_token,
-                expires_in=new_access_token_entity.expires_in,
             )
 
 
-@dataclass()
+@dataclass
 class LogoutUseCase:
     uow: "UnitOfWorkPort"
     token_service: "TokenServicePort"
@@ -136,7 +137,25 @@ class LogoutUseCase:
         async with self.uow as uow:
             refresh_token = await uow.refresh_token_repo.get_by_jti(claims.jti)
             if refresh_token is not None:
-                print(f"Revoking refresh token: {refresh_token}")  # Debugging line
                 refresh_token.revoke()
                 await uow.refresh_token_repo.revoke(refresh_token)
                 await uow.commit()
+
+
+@dataclass
+class GetCurrentUserUseCase:
+    user_repo: "UserRepositoryPort"
+    token_service: "TokenServicePort"
+
+    async def execute(self, access_token: str) -> User:
+        claims = self.token_service.decode_access_token(access_token)
+        if claims is None:
+            raise InvalidAccessTokenError("Invalid access token")
+        if claims.is_expired():
+            raise AccessTokenExpiredError("Access token has expired")
+
+        user = await self.user_repo.get_by_id(claims.user_id)
+        if not user:
+            raise InvalidTokenError("User not found.")
+
+        return user

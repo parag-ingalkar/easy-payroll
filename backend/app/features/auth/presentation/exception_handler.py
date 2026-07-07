@@ -2,6 +2,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from app.features.auth.domain.exceptions import (
+    AccessTokenExpiredError,
+    InvalidAccessTokenError,
     InvalidCredentialsError,
     InvalidTokenError,
     MissingTokenError,
@@ -93,5 +95,39 @@ def register_auth_exception_handlers(app):
                     "code": "missing_token",
                     "message": "No refresh token provided.",
                 }
+            },
+        )
+
+    @app.exception_handler(InvalidAccessTokenError)
+    async def invalid_access_token_exception_handler(
+        request: Request, exc: InvalidAccessTokenError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": "invalid_access_token",
+                    "message": "Invalid or expired access token.",
+                },
+            },
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
+        )
+
+    @app.exception_handler(AccessTokenExpiredError)
+    async def access_token_expired_exception_handler(
+        request: Request, exc: AccessTokenExpiredError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": "access_token_expired",
+                    "message": "Access token has expired.",
+                },
+            },
+            headers={
+                "WWW-Authenticate": "Bearer",
             },
         )

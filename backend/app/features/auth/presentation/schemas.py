@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.core.config import get_settings
 from app.features.auth.domain.value_objects import UserRole
 
 
@@ -32,7 +33,7 @@ class UserResponse(UserBase):
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
-    expires_in: int
+    expires_in: int = Field(default=get_settings().access_token_expire_minutes * 60)
 
     model_config = ConfigDict(from_attributes=True)
 

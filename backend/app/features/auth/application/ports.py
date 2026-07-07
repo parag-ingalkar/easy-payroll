@@ -20,6 +20,10 @@ class TokenServicePort(Protocol):
         """Creates an access token for the given user details."""
         ...
 
+    def decode_access_token(self, token: str) -> AccessToken | None:
+        """Decodes the given access token and returns its details."""
+        ...
+
     def encode_refresh_token(self, refresh_token: RefreshToken) -> str:
         """Creates a refresh token and returns it along with its JTI and expiration datetime."""
         ...

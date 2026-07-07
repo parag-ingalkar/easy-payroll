@@ -7,7 +7,10 @@ from pwdlib import PasswordHash
 from app.core.config import get_settings
 from app.features.auth.application.ports import PasswordHasherPort, TokenServicePort
 from app.features.auth.domain.entities import RefreshToken
-from app.features.auth.domain.value_objects import AccessToken, RefreshTokenClaims
+from app.features.auth.domain.value_objects import (
+    AccessToken,
+    RefreshTokenClaims,
+)
 
 
 class Argon2PasswordHasher(PasswordHasherPort):
@@ -35,6 +38,24 @@ class TokenService(TokenServicePort):
             get_settings().secret_key.get_secret_value(),
             get_settings().algorithm,
         )
+
+    def decode_access_token(self, token: str) -> AccessToken | None:
+        try:
+            payload = jwt.decode(
+                token,
+                get_settings().secret_key.get_secret_value(),
+                algorithms=[get_settings().algorithm],
+            )
+            if payload.get("type") != "access":
+                return None
+            return AccessToken(
+                user_id=UUID(payload["sub"]),
+                roles=[role for role in payload["roles"]],
+                created_at=datetime.fromtimestamp(payload["iat"], UTC),
+                expires_at=datetime.fromtimestamp(payload["exp"], UTC),
+            )
+        except (jwt.PyJWTError, KeyError, ValueError, TypeError):
+            return None
 
     def encode_refresh_token(self, refresh_token: RefreshToken) -> str:
         payload = {

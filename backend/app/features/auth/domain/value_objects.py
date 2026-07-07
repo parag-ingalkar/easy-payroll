@@ -18,7 +18,6 @@ class AccessToken:
     roles: list[UserRole]
     created_at: datetime
     expires_at: datetime
-    expires_in: int
 
     @staticmethod
     def create(user_id: UUID, roles: list[UserRole]):
@@ -30,8 +29,10 @@ class AccessToken:
             roles=roles,
             created_at=created_at,
             expires_at=expires_at,
-            expires_in=expires_in,
         )
+
+    def is_expired(self) -> bool:
+        return get_now() > self.expires_at
 
 
 @dataclass(frozen=True)
