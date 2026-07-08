@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from app.core.uow import AbstractUnitOfWork
 from app.features.auth.application.commands import (
     CreateUserCommand,
     LoginUserCommand,
@@ -8,6 +9,7 @@ from app.features.auth.application.commands import (
 )
 from app.features.auth.application.ports import (
     PasswordHasherPort,
+    TokenRepositoryPort,
     TokenServicePort,
     UserRepositoryPort,
 )
@@ -22,7 +24,6 @@ from app.features.auth.domain.exceptions import (
     UserAlreadyExists,
 )
 from app.features.auth.domain.value_objects import AccessToken, UserRole
-from app.shared.application.uow_port import UnitOfWorkPort
 
 
 @dataclass
@@ -33,12 +34,13 @@ class TokenResponseDTO:
 
 @dataclass
 class CreateUserUseCase:
-    uow: UnitOfWorkPort
+    uow: AbstractUnitOfWork
+    user_repo: UserRepositoryPort
     password_hasher: PasswordHasherPort
 
     async def execute(self, command: CreateUserCommand) -> User:
-        async with self.uow as uow:
-            existing_user = await uow.user_repo.get_by_email(command.email)
+        async with self.uow:
+            existing_user = await self.user_repo.get_by_email(command.email)
             if existing_user:
                 raise UserAlreadyExists("Email already in use.")
 
@@ -49,20 +51,21 @@ class CreateUserUseCase:
                 roles=[UserRole.OWNER],
             )
 
-            await uow.user_repo.add(new_user)
-            await uow.commit()
+            await self.user_repo.add(new_user)
             return new_user
 
 
 @dataclass
 class LoginUseCase:
-    uow: "UnitOfWorkPort"
-    password_hasher: "PasswordHasherPort"
-    token_service: "TokenServicePort"
+    uow: AbstractUnitOfWork
+    user_repo: UserRepositoryPort
+    refresh_token_repo: TokenRepositoryPort
+    password_hasher: PasswordHasherPort
+    token_service: TokenServicePort
 
     async def execute(self, command: LoginUserCommand) -> TokenResponseDTO:
-        async with self.uow as uow:
-            user = await uow.user_repo.get_by_email(command.email)
+        async with self.uow:
+            user = await self.user_repo.get_by_email(command.email)
             if not user or not self.password_hasher.verify(command.password, user.hashed_password):
                 raise InvalidCredentialsError
 
@@ -72,8 +75,7 @@ class LoginUseCase:
             access_token = self.token_service.encode_access_token(access_token_entity)
             refresh_token = self.token_service.encode_refresh_token(refresh_token_entity)
 
-            await uow.refresh_token_repo.add(refresh_token_entity)
-            await uow.commit()
+            await self.refresh_token_repo.add(refresh_token_entity)
 
             return TokenResponseDTO(
                 access_token=access_token,
@@ -83,16 +85,18 @@ class LoginUseCase:
 
 @dataclass
 class RefreshTokenUseCase:
-    uow: "UnitOfWorkPort"
-    token_service: "TokenServicePort"
+    uow: AbstractUnitOfWork
+    user_repo: UserRepositoryPort
+    refresh_token_repo: TokenRepositoryPort
+    token_service: TokenServicePort
 
     async def execute(self, command: RefreshTokenCommand) -> TokenResponseDTO:
         claims = self.token_service.decode_refresh_token(command.refresh_token)
         if claims is None:
             raise InvalidTokenError("Invalid refresh token")
 
-        async with self.uow as uow:
-            refresh_token = await uow.refresh_token_repo.get_by_jti(claims.jti)
+        async with self.uow:
+            refresh_token = await self.refresh_token_repo.get_by_jti(claims.jti)
             if refresh_token is None or refresh_token.user_id != claims.user_id:
                 raise InvalidTokenError("Invalid refresh token.")
             if not refresh_token.can_refresh():
@@ -102,12 +106,12 @@ class RefreshTokenUseCase:
                     else TokenExpiredError("Refresh token has expired.")
                 )
 
-            user = await uow.user_repo.get_by_id(claims.user_id)
+            user = await self.user_repo.get_by_id(claims.user_id)
             if not user:
                 raise InvalidTokenError("User associated with the refresh token not found.")
 
             refresh_token.revoke()
-            await uow.refresh_token_repo.revoke(refresh_token)
+            await self.refresh_token_repo.revoke(refresh_token)
 
             new_access_token_entity = AccessToken.create(user.id, user.roles)
             new_refresh_token_entity = RefreshToken.create(user.id)
@@ -115,8 +119,7 @@ class RefreshTokenUseCase:
             new_access_token = self.token_service.encode_access_token(new_access_token_entity)
             new_refresh_token = self.token_service.encode_refresh_token(new_refresh_token_entity)
 
-            await uow.refresh_token_repo.add(new_refresh_token_entity)
-            await uow.commit()
+            await self.refresh_token_repo.add(new_refresh_token_entity)
 
             return TokenResponseDTO(
                 access_token=new_access_token,
@@ -126,26 +129,26 @@ class RefreshTokenUseCase:
 
 @dataclass
 class LogoutUseCase:
-    uow: "UnitOfWorkPort"
-    token_service: "TokenServicePort"
+    uow: AbstractUnitOfWork
+    refresh_token_repo: TokenRepositoryPort
+    token_service: TokenServicePort
 
     async def execute(self, command: LogoutUserCommand) -> None:
         claims = self.token_service.decode_refresh_token(command.refresh_token)
         if claims is None:
             raise InvalidTokenError("Invalid refresh token")
 
-        async with self.uow as uow:
-            refresh_token = await uow.refresh_token_repo.get_by_jti(claims.jti)
+        async with self.uow:
+            refresh_token = await self.refresh_token_repo.get_by_jti(claims.jti)
             if refresh_token is not None:
                 refresh_token.revoke()
-                await uow.refresh_token_repo.revoke(refresh_token)
-                await uow.commit()
+                await self.refresh_token_repo.revoke(refresh_token)
 
 
 @dataclass
 class GetCurrentUserUseCase:
-    user_repo: "UserRepositoryPort"
-    token_service: "TokenServicePort"
+    user_repo: UserRepositoryPort
+    token_service: TokenServicePort
 
     async def execute(self, access_token: str) -> User:
         claims = self.token_service.decode_access_token(access_token)
