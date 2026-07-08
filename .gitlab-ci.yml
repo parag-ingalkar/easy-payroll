@@ -1,0 +1,19 @@
+stages:
+  - lint
+
+variables:
+  UV_SYSTEM_PYTHON: "1"    # optional, if you ever use uv pip [web:121]
+
+lint-and-typecheck:
+  stage: lint
+  image: ghcr.io/astral-sh/uv:0.11.26-python3.12-trixie-slim  # uv image with Python [web:121]
+  script:
+    - cd backend
+    # Install dependencies from uv.lock
+    - uv sync --locked
+    # Ruff lint
+    - uv run ruff check .
+    # Ruff format (check mode)
+    - uv run ruff format --check .
+    # Pyright type-check
+    - uv run pyright
