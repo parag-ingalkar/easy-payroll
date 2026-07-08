@@ -15,13 +15,10 @@ from app.features.auth.application.ports import (
 )
 from app.features.auth.domain.entities import RefreshToken, User
 from app.features.auth.domain.exceptions import (
-    AccessTokenExpiredError,
     InvalidAccessTokenError,
     InvalidCredentialsError,
     InvalidTokenError,
-    TokenExpiredError,
-    TokenRevokedError,
-    UserAlreadyExists,
+    UserAlreadyExistsError,
 )
 from app.features.auth.domain.value_objects import AccessToken, UserRole
 
@@ -42,7 +39,7 @@ class CreateUserUseCase:
         async with self.uow:
             existing_user = await self.user_repo.get_by_email(command.email)
             if existing_user:
-                raise UserAlreadyExists("Email already in use.")
+                raise UserAlreadyExistsError
 
             new_user = User.create(
                 email=command.email,
@@ -93,22 +90,18 @@ class RefreshTokenUseCase:
     async def execute(self, command: RefreshTokenCommand) -> TokenResponseDTO:
         claims = self.token_service.decode_refresh_token(command.refresh_token)
         if claims is None:
-            raise InvalidTokenError("Invalid refresh token")
+            raise InvalidTokenError
 
         async with self.uow:
             refresh_token = await self.refresh_token_repo.get_by_jti(claims.jti)
             if refresh_token is None or refresh_token.user_id != claims.user_id:
-                raise InvalidTokenError("Invalid refresh token.")
+                raise InvalidTokenError
             if not refresh_token.can_refresh():
-                raise (
-                    TokenRevokedError("Refresh token has been revoked.")
-                    if refresh_token.revoked
-                    else TokenExpiredError("Refresh token has expired.")
-                )
+                raise InvalidTokenError
 
             user = await self.user_repo.get_by_id(claims.user_id)
             if not user:
-                raise InvalidTokenError("User associated with the refresh token not found.")
+                raise InvalidTokenError
 
             refresh_token.revoke()
             await self.refresh_token_repo.revoke(refresh_token)
@@ -136,7 +129,7 @@ class LogoutUseCase:
     async def execute(self, command: LogoutUserCommand) -> None:
         claims = self.token_service.decode_refresh_token(command.refresh_token)
         if claims is None:
-            raise InvalidTokenError("Invalid refresh token")
+            raise InvalidTokenError
 
         async with self.uow:
             refresh_token = await self.refresh_token_repo.get_by_jti(claims.jti)
@@ -152,13 +145,11 @@ class GetCurrentUserUseCase:
 
     async def execute(self, access_token: str) -> User:
         claims = self.token_service.decode_access_token(access_token)
-        if claims is None:
-            raise InvalidAccessTokenError("Invalid access token")
-        if claims.is_expired():
-            raise AccessTokenExpiredError("Access token has expired")
+        if claims is None or claims.is_expired():
+            raise InvalidAccessTokenError
 
         user = await self.user_repo.get_by_id(claims.user_id)
         if not user:
-            raise InvalidTokenError("User not found.")
+            raise InvalidAccessTokenError
 
         return user

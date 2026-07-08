@@ -27,5 +27,3 @@ def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
 
 class Base(DeclarativeBase):
     pass
-
-

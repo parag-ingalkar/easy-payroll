@@ -16,9 +16,6 @@ from app.features.auth.application.use_cases import (
 from app.features.auth.domain.entities import User
 from app.features.auth.domain.exceptions import (
     InvalidTokenError,
-    MissingTokenError,
-    TokenExpiredError,
-    TokenRevokedError,
 )
 from app.features.auth.presentation.dependencies import (
     get_create_user_use_case,
@@ -114,12 +111,12 @@ async def refresh_token(
     cookie_refresh_token = request.cookies.get("refresh_token")
     refresh_token = cookie_refresh_token or (body.refresh_token if body else None)
     if not refresh_token:
-        raise MissingTokenError("No refresh token provided.")
+        raise InvalidTokenError("No refresh token provided.")
     command = RefreshTokenCommand(refresh_token=refresh_token)
 
     try:
         token_response = await use_case.execute(command)
-    except (InvalidTokenError, TokenRevokedError, TokenExpiredError):
+    except InvalidTokenError:
         _clear_refresh_token_cookie(response)
         raise
 
@@ -151,7 +148,7 @@ async def logout(
     try:
         command = LogoutUserCommand(refresh_token=refresh_token)
         await use_case.execute(command)
-    except (InvalidTokenError, TokenRevokedError, TokenExpiredError):
+    except InvalidTokenError:
         pass
 
     _clear_refresh_token_cookie(response)

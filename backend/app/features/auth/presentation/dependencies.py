@@ -36,25 +36,33 @@ def get_create_user_use_case(
 
 
 def get_login_use_case(
-        db_session: AsyncSession = Depends(get_db),
+    db_session: AsyncSession = Depends(get_db),
 ):
     uow = SQLAlchemyUnitOfWork(db_session)
     user_repo = SQLUserRepository(db_session)
     refresh_token_repo = SQLTokenRepository(db_session)
     password_hasher = Argon2PasswordHasher()
     token_service = TokenService()
-    return LoginUseCase(uow=uow, user_repo=user_repo, refresh_token_repo=refresh_token_repo, password_hasher=password_hasher, token_service=token_service)
+    return LoginUseCase(
+        uow=uow,
+        user_repo=user_repo,
+        refresh_token_repo=refresh_token_repo,
+        password_hasher=password_hasher,
+        token_service=token_service,
+    )
 
 
-def get_refresh_token_use_case(
-        db_session: AsyncSession = Depends(get_db)
-):
+def get_refresh_token_use_case(db_session: AsyncSession = Depends(get_db)):
     uow = SQLAlchemyUnitOfWork(db_session)
     user_repo = SQLUserRepository(db_session)
     refresh_token_repo = SQLTokenRepository(db_session)
     token_service = TokenService()
-    return RefreshTokenUseCase(uow=uow, user_repo=user_repo, refresh_token_repo=refresh_token_repo, token_service=token_service)
-
+    return RefreshTokenUseCase(
+        uow=uow,
+        user_repo=user_repo,
+        refresh_token_repo=refresh_token_repo,
+        token_service=token_service,
+    )
 
 
 def get_logout_use_case(
@@ -63,7 +71,9 @@ def get_logout_use_case(
     uow = SQLAlchemyUnitOfWork(db_session)
     refresh_token_repo = SQLTokenRepository(db_session)
     token_service = TokenService()
-    return LogoutUseCase(uow=uow, refresh_token_repo=refresh_token_repo, token_service=token_service)
+    return LogoutUseCase(
+        uow=uow, refresh_token_repo=refresh_token_repo, token_service=token_service
+    )
 
 
 async def get_current_user(

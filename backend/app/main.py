@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.core.database import get_engine
-from app.shared.presentation.exception_handler import register_exception_handlers
-from app.shared.presentation.router import router as shared_router
+from app.core.exception_handler import register_exception_handlers
+from app.core.router import router as shared_router
 
 
 @asynccontextmanager
