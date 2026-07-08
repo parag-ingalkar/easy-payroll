@@ -5,11 +5,6 @@ lint-and-typecheck:
   stage: lint
   image: astral/uv:bookworm-slim   # generic uv image
   script:
-    # Install Python 3.14 via uv
-    - uv python install 3.14       # grabs 3.14 into the container
-    # Optionally create a venv pinned to 3.14
-    - uv venv --python 3.14 .venv  # fast venv with uv-managed 3.14
-    - source .venv/bin/activate
     - cd backend
     - uv sync --locked
     - uv run ruff check .
