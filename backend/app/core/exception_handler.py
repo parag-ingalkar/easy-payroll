@@ -51,8 +51,17 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(DomainError)
     async def _handle_domain_error(_: Request, exc: DomainError) -> JSONResponse:
+        if (
+            isinstance(exc, UnauthorizedError)
+            and hasattr(exc, "token_type")
+            and exc.token_type == "access"  # type: ignore
+        ):
+            headers = {"WWW-Authenticate": "Bearer"}
+        else:
+            headers = None
+
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail},
-            headers={"WWW-Authenticate": "Bearer"} if exc.token_type == "access" else None,  # type: ignore
+            headers=headers,
         )
