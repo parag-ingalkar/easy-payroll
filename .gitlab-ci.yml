@@ -9,4 +9,5 @@ lint-and-typecheck:
     - uv sync --locked
     - uv run ruff check .
     - uv run ruff format --check .
+    - uv pip install pyright[nodejs]
     - uv run pyright
