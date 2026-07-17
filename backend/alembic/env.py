@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.database import Base
 from app.features.auth.infrastructure.models import RefreshTokenModel, UserModel  # noqa: F401
 from app.features.business.infrastructure.models import BusinessModel  # noqa: F401
+from app.features.employee.infrastructure.models import EmployeeModel  # noqa: F401
 from app.features.holiday.infrastructure.models import HolidayModel  # noqa: F401
 
 # this is the Alembic Config object, which provides

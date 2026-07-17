@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from app.core.uow import AbstractUnitOfWork
 from app.features.business.application.ports import BusinessRepositoryPort
-from app.features.business.domain.exceptions import BusinessNotOwnedError
+from app.features.business.application.services import get_owned_business
 from app.features.holiday.application.commands import (
     CreateHolidayCommand,
     DeleteHolidayCommand,
@@ -27,21 +27,19 @@ class CreateHolidayUseCase:
     async def execute(self, command: CreateHolidayCommand) -> Holiday:
         async with self.uow:
             # Check business existence and ownership
-            business = await self.business_repo.get_by_id_and_owner_id(
-                command.business_id, command.owner_id
+            business = await get_owned_business(
+                self.business_repo, command.business_id, command.owner_id
             )
-            if not business:
-                raise BusinessNotOwnedError
 
             # Check for duplicate holiday
             existing_holiday = await self.holiday_repo.get_by_business_id_and_date(
                 command.business_id, command.holiday_date
             )
             if existing_holiday:
-                raise DuplicateHolidayError
+                raise DuplicateHolidayError(command.business_id, command.holiday_date)
 
             holiday = Holiday.create(
-                business_id=command.business_id,
+                business_id=business.id,
                 holiday_date=command.holiday_date,
                 name=command.name,
                 holiday_type=command.holiday_type,
@@ -61,18 +59,16 @@ class DeleteHolidayUseCase:
     async def execute(self, command: DeleteHolidayCommand) -> None:
         async with self.uow:
             # Check business existence and ownership
-            business = await self.business_repo.get_by_id_and_owner_id(
-                command.business_id, command.owner_id
+            business = await get_owned_business(
+                self.business_repo, command.business_id, command.owner_id
             )
-            if not business:
-                raise BusinessNotOwnedError
 
             # Check if the holiday exists
             holiday = await self.holiday_repo.get_by_business_id_and_date(
-                command.business_id, command.holiday_date
+                business.id, command.holiday_date
             )
             if not holiday:
-                raise HolidayNotFoundError
+                raise HolidayNotFoundError(business.id, command.holiday_date)
 
             await self.holiday_repo.delete(holiday)
 
@@ -84,17 +80,15 @@ class GetHolidayUseCase:
 
     async def execute(self, command: GetHolidayCommand) -> Holiday:
         # Check business existence and ownership
-        business = await self.business_repo.get_by_id_and_owner_id(
-            command.business_id, command.owner_id
+        business = await get_owned_business(
+            self.business_repo, command.business_id, command.owner_id
         )
-        if not business:
-            raise BusinessNotOwnedError
 
         holiday = await self.holiday_repo.get_by_business_id_and_date(
-            command.business_id, command.holiday_date
+            business.id, command.holiday_date
         )
         if not holiday:
-            raise HolidayNotFoundError
+            raise HolidayNotFoundError(business.id, command.holiday_date)
 
         return holiday
 
@@ -106,13 +100,11 @@ class ListHolidaysUseCase:
 
     async def execute(self, command: ListHolidaysCommand) -> Sequence[Holiday]:
         # Check business existence and ownership
-        business = await self.business_repo.get_by_id_and_owner_id(
-            command.business_id, command.owner_id
+        business = await get_owned_business(
+            self.business_repo, command.business_id, command.owner_id
         )
-        if not business:
-            raise BusinessNotOwnedError
 
         holidays = await self.holiday_repo.list_by_business(
-            command.business_id, command.year, command.month
+            business.id, command.year, command.month
         )
         return holidays

@@ -39,7 +39,7 @@ class CreateUserUseCase:
         async with self.uow:
             existing_user = await self.user_repo.get_by_email(command.email)
             if existing_user:
-                raise UserAlreadyExistsError
+                raise UserAlreadyExistsError(email=command.email)
 
             new_user = User.create(
                 email=command.email,

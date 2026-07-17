@@ -7,10 +7,9 @@ from app.features.business.application.commands import (
     UpdateBusinessCommand,
 )
 from app.features.business.application.ports import BusinessRepositoryPort
+from app.features.business.application.services import get_owned_business
 from app.features.business.domain.entities import Business
 from app.features.business.domain.exceptions import (
-    BusinessNotFoundError,
-    BusinessNotOwnedError,
     DuplicateBusinessError,
 )
 
@@ -34,7 +33,7 @@ class CreateBusinessUseCase:
                 business.slug
             )  # Check for slug uniqueness
             if existing_business:
-                raise DuplicateBusinessError
+                raise DuplicateBusinessError(slug=business.slug)
 
             await self.business_repo.add(business)
             return business
@@ -47,11 +46,9 @@ class UpdateBusinessUseCase:
 
     async def execute(self, command: UpdateBusinessCommand) -> Business:
         async with self.uow:
-            business = await self.business_repo.get_by_id(command.business_id)
-            if not business:
-                raise BusinessNotFoundError
-            if business.owner_id != command.owner_id:
-                raise BusinessNotOwnedError
+            business = await get_owned_business(
+                self.business_repo, command.business_id, command.owner_id
+            )
 
             business.update(
                 name=command.name,
@@ -71,10 +68,8 @@ class DeleteBusinessUseCase:
 
     async def execute(self, command: DeleteBusinessCommand) -> None:
         async with self.uow:
-            business = await self.business_repo.get_by_id(command.business_id)
-            if not business:
-                raise BusinessNotFoundError
-            if business.owner_id != command.owner_id:
-                raise BusinessNotOwnedError
+            business = await get_owned_business(
+                self.business_repo, command.business_id, command.owner_id
+            )
 
             await self.business_repo.delete(business)

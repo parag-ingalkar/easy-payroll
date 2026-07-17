@@ -10,7 +10,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 from app.features.business.domain.entities import Business
-from app.features.business.domain.value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
 
 divisor_policy_type = SAEnum(
     DivisorPolicy,

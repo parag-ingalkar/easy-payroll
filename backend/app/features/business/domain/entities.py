@@ -6,7 +6,9 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from .value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.exceptions import BusinessNotOwnedError
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
 
 
 @dataclass
@@ -67,3 +69,8 @@ class Business:
             self.default_weekly_off_days = kwargs["default_weekly_off_days"]
         if "default_working_hours" in kwargs:
             self.default_working_hours = kwargs["default_working_hours"]
+
+    def ensure_owned_by(self, user_id: UUID) -> None:
+        """Ensure that the business is owned by the given user ID."""
+        if self.owner_id != user_id:
+            raise BusinessNotOwnedError(business_id=self.id, owner_id=self.owner_id)

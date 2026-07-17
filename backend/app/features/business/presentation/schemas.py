@@ -4,7 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.features.business.domain.value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
 
 
 class CreateBusinessRequest(BaseModel):

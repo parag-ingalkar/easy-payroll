@@ -31,14 +31,14 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=120), nullable=False),
         sa.Column(
             "divisor_policy",
-            sa.Enum("26", "30", "calendar", name="divisor_policy_enum"),
+            postgresql.ENUM("26", "30", "calendar", name="divisor_policy_enum"),
             nullable=False,
         ),
         sa.Column("default_overtime_multiplier", sa.Numeric(precision=3, scale=1), nullable=False),
         sa.Column(
             "default_weekly_off_days",
             postgresql.ARRAY(
-                sa.Enum(
+                postgresql.ENUM(
                     "monday",
                     "tuesday",
                     "wednesday",

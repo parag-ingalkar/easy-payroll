@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
-from ..domain.value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
 
 
 @dataclass(frozen=True)
