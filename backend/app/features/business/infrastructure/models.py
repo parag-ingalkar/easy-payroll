@@ -39,13 +39,13 @@ class BusinessModel(Base):
     slug: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     divisor_policy: Mapped[DivisorPolicy] = mapped_column(divisor_policy_type, nullable=False)
     default_overtime_multiplier: Mapped[Decimal] = mapped_column(
-        Numeric(precision=3, scale=1), nullable=False, default=Decimal("2.0")
+        Numeric(precision=3, scale=2), nullable=False, default=Decimal("2.0")
     )
     default_weekly_off_days: Mapped[list[WeekDay]] = mapped_column(
         ARRAY(weekday_type), nullable=False, default=[WeekDay.SUNDAY]
     )
     default_working_hours: Mapped[Decimal] = mapped_column(
-        Numeric(precision=3, scale=2), nullable=False, default=Decimal("8.0")
+        Numeric(precision=4, scale=2), nullable=False, default=Decimal("8.0")
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

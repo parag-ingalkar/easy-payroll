@@ -3,6 +3,7 @@ from datetime import date
 from typing import Protocol
 from uuid import UUID
 
+from app.features.business.domain.entities import Business
 from app.features.holiday.domain.entities import Holiday
 
 
@@ -27,4 +28,16 @@ class HolidaysRepositoryPort(Protocol):
 
     async def delete(self, holiday: Holiday) -> None:
         """Delete a holiday."""
+        ...
+
+
+class BusinessServicePort(Protocol):
+    """Cross-feature port for the holiday feature to access business capability.
+
+    Satisfied structurally by ``BusinessService`` (business feature). Defined
+    here — the consumer — per hexagonal/ports-and-adapters convention.
+    """
+
+    async def get_owned_business(self, business_id: UUID, owner_id: UUID) -> Business:
+        """Fetch a business and verify it is owned by ``owner_id``."""
         ...

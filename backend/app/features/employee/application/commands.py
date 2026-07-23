@@ -4,13 +4,14 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
+from app.features.auth.domain.entities import CurrentUser
 from app.features.employee.domain.value_objects import SalaryType
 from app.shared.enums import WeekDay
 
 
 @dataclass(frozen=True)
 class CreateEmployeeCommand:
-    current_user_id: UUID
+    current_user: CurrentUser
     business_id: UUID
     name: str
     salary_type: SalaryType
@@ -25,8 +26,7 @@ class CreateEmployeeCommand:
 
 @dataclass(frozen=True)
 class UpdateEmployeeCommand:
-    current_user_id: UUID
-    business_id: UUID
+    current_user: CurrentUser
     employee_id: UUID
     name: str | None = None
     salary_type: SalaryType | None = None
@@ -41,34 +41,30 @@ class UpdateEmployeeCommand:
 
 @dataclass(frozen=True)
 class GetEmployeesCommand:
-    current_user_id: UUID
+    current_user: CurrentUser
     business_id: UUID
     include_inactive: bool = False
 
 
 @dataclass(frozen=True)
 class GetEmployeeCommand:
-    current_user_id: UUID
-    business_id: UUID
+    current_user: CurrentUser
     employee_id: UUID
 
 
 @dataclass(frozen=True)
 class DeleteEmployeeCommand:
-    current_user_id: UUID
-    business_id: UUID
+    current_user: CurrentUser
     employee_id: UUID
 
 
 @dataclass(frozen=True)
 class ActivateEmployeeCommand:
-    current_user_id: UUID
-    business_id: UUID
+    current_user: CurrentUser
     employee_id: UUID
 
 
 @dataclass(frozen=True)
 class DeactivateEmployeeCommand:
-    current_user_id: UUID
-    business_id: UUID
+    current_user: CurrentUser
     employee_id: UUID

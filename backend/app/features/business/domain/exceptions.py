@@ -25,3 +25,11 @@ class DuplicateBusinessError(ConflictError):
 
     def __init__(self, slug: object) -> None:
         super().__init__(slug=slug)
+
+
+class InsufficientPermissionsError(ForbiddenError):
+    code = "insufficient_permissions"
+    detail = "You do not have sufficient permissions to perform this action"
+
+    def __init__(self, user_id: object, required_role: object) -> None:
+        super().__init__(user_id=user_id, required_role=required_role)

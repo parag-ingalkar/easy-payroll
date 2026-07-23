@@ -11,7 +11,7 @@ from app.features.auth.application.use_cases import (
     LogoutUseCase,
     RefreshTokenUseCase,
 )
-from app.features.auth.domain.entities import User
+from app.features.auth.domain.entities import CurrentUser, User
 from app.features.auth.infrastructure.adapters import Argon2PasswordHasher, TokenService
 from app.features.auth.infrastructure.repositories import SQLTokenRepository, SQLUserRepository
 
@@ -79,6 +79,6 @@ def get_logout_use_case(
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     use_case: "GetCurrentUserUseCase" = Depends(get_current_user_use_case),
-) -> "User":
+) -> "CurrentUser":
     access_token = credentials.credentials
     return await use_case.execute(access_token)

@@ -48,7 +48,7 @@ class EmployeeResponse(BaseModel):
     base_rate: Decimal
     overtime_multiplier: Decimal
     weekly_off_days: list[WeekDay]
-    working_hours: int
+    working_hours: Decimal
     joining_date: date | None
     is_active: bool
     created_at: datetime

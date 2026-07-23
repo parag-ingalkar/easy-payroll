@@ -5,13 +5,14 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
+from app.features.auth.domain.entities import CurrentUser
 from app.features.business.domain.value_objects import DivisorPolicy
 from app.shared.enums import WeekDay
 
 
 @dataclass(frozen=True)
 class CreateBusinessCommand:
-    owner_id: UUID
+    current_user: CurrentUser
     name: str
     divisor_policy: DivisorPolicy
     default_overtime_multiplier: Decimal | None
@@ -20,9 +21,14 @@ class CreateBusinessCommand:
 
 
 @dataclass(frozen=True)
+class ListBusinessesCommand:
+    current_user: CurrentUser
+
+
+@dataclass(frozen=True)
 class UpdateBusinessCommand:
     business_id: UUID
-    owner_id: UUID
+    current_user: CurrentUser
     name: str | None = None
     divisor_policy: DivisorPolicy | None = None
     default_overtime_multiplier: Decimal | None = None
@@ -33,4 +39,4 @@ class UpdateBusinessCommand:
 @dataclass(frozen=True)
 class DeleteBusinessCommand:
     business_id: UUID
-    owner_id: UUID
+    current_user: CurrentUser

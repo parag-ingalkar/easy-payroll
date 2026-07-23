@@ -50,13 +50,13 @@ class EmployeeModel(Base):
     salary_type: Mapped[SalaryType] = mapped_column(salary_type_enum, nullable=False)
     base_rate: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     overtime_multiplier: Mapped[Decimal] = mapped_column(
-        Numeric(3, 1), nullable=False, default=Decimal("2.0"), server_default="2.0"
+        Numeric(3, 2), nullable=False, default=Decimal("2.0"), server_default="2.0"
     )
     weekly_off_days: Mapped[list[WeekDay]] = mapped_column(
         ARRAY(weekday_type), nullable=False, default=[WeekDay.SUNDAY]
     )
     working_hours: Mapped[Decimal] = mapped_column(
-        Numeric(precision=3, scale=2), nullable=False, default=Decimal("8.0")
+        Numeric(precision=4, scale=2), nullable=False, default=Decimal("8.0")
     )
     joining_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(

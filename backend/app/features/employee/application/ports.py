@@ -1,6 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
+from app.features.business.domain.entities import Business
 from app.features.employee.domain.entities import Employee
 
 
@@ -29,4 +30,16 @@ class EmployeeRepositoryPort(Protocol):
         self, business_id: UUID, include_inactive: bool
     ) -> list[Employee]:
         """Fetches all employees for a given business ID."""
+        ...
+
+
+class BusinessServicePort(Protocol):
+    """Cross-feature port for the employee feature to access business capability.
+
+    Satisfied structurally by ``BusinessService`` (business feature). Defined
+    here — the consumer — per hexagonal/ports-and-adapters convention.
+    """
+
+    async def get_owned_business(self, business_id: UUID, owner_id: UUID) -> Business:
+        """Fetch a business and verify it is owned by ``owner_id``."""
         ...

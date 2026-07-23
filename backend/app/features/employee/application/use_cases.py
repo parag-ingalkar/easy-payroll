@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 
 from app.core.uow import AbstractUnitOfWork
-from app.features.business.application.ports import BusinessRepositoryPort
-from app.features.business.application.services import get_owned_business
 from app.features.employee.application.commands import (
     ActivateEmployeeCommand,
     CreateEmployeeCommand,
@@ -12,8 +10,8 @@ from app.features.employee.application.commands import (
     GetEmployeesCommand,
     UpdateEmployeeCommand,
 )
-from app.features.employee.application.ports import EmployeeRepositoryPort
-from app.features.employee.application.services import get_owned_employee
+from app.features.employee.application.ports import BusinessServicePort
+from app.features.employee.application.services import EmployeeService
 from app.features.employee.domain.entities import Employee
 from app.features.employee.domain.exceptions import (
     EmployeeAlreadyExistsError,
@@ -23,16 +21,16 @@ from app.features.employee.domain.exceptions import (
 @dataclass
 class CreateEmployeeUseCase:
     uow: AbstractUnitOfWork
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: CreateEmployeeCommand) -> Employee:
         async with self.uow:
-            business = await get_owned_business(
-                self.business_repo, command.business_id, command.current_user_id
+            business = await self.business_service.get_owned_business(
+                command.business_id, command.current_user.id
             )
 
-            existing_employee = await self.employee_repo.get_by_business_id_and_name(
+            existing_employee = await self.employee_service.get_by_business_and_name(
                 business.id, command.name
             )
             if existing_employee:
@@ -64,23 +62,22 @@ class CreateEmployeeUseCase:
                 designation=command.designation,
                 joining_date=command.joining_date,
             )
-            await self.employee_repo.add(employee)
+            await self.employee_service.add(employee)
             return employee
 
 
 @dataclass
 class UpdateEmployeeUseCase:
     uow: AbstractUnitOfWork
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: UpdateEmployeeCommand) -> Employee:
         async with self.uow:
-            business = await get_owned_business(
-                self.business_repo, command.business_id, command.current_user_id
+            employee = await self.employee_service.get_by_id_or_raise(command.employee_id)
+            await self.business_service.get_owned_business(
+                employee.business_id, command.current_user.id
             )
-
-            employee = await get_owned_employee(self.employee_repo, command.employee_id, business)
 
             employee.update(
                 name=command.name,
@@ -93,90 +90,85 @@ class UpdateEmployeeUseCase:
                 designation=command.designation,
                 joining_date=command.joining_date,
             )
-            await self.employee_repo.update(employee)
+            await self.employee_service.update(employee)
             return employee
 
 
 @dataclass
 class DeleteEmployeeUseCase:
     uow: AbstractUnitOfWork
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: DeleteEmployeeCommand) -> None:
         async with self.uow:
-            business = await get_owned_business(
-                self.business_repo, command.business_id, command.current_user_id
+            employee = await self.employee_service.get_by_id_or_raise(command.employee_id)
+            await self.business_service.get_owned_business(
+                employee.business_id, command.current_user.id
             )
 
-            employee = await get_owned_employee(self.employee_repo, command.employee_id, business)
-
-            await self.employee_repo.delete(employee)
+            await self.employee_service.delete(employee)
 
 
 @dataclass
 class GetEmployeesUseCase:
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: GetEmployeesCommand) -> list[Employee]:
-        business = await get_owned_business(
-            self.business_repo, command.business_id, command.current_user_id
+        business = await self.business_service.get_owned_business(
+            command.business_id, command.current_user.id
         )
 
-        employees = await self.employee_repo.get_all_by_business_id(
+        return await self.employee_service.list_by_business(
             business.id, include_inactive=command.include_inactive
         )
-        return employees
 
 
 @dataclass
 class GetEmployeeUseCase:
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: GetEmployeeCommand) -> Employee:
-        business = await get_owned_business(
-            self.business_repo, command.business_id, command.current_user_id
+        employee = await self.employee_service.get_by_id_or_raise(command.employee_id)
+        await self.business_service.get_owned_business(
+            employee.business_id, command.current_user.id
         )
-
-        employee = await get_owned_employee(self.employee_repo, command.employee_id, business)
         return employee
 
 
 @dataclass
 class ActivateEmployeeUseCase:
     uow: AbstractUnitOfWork
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: ActivateEmployeeCommand) -> Employee:
         async with self.uow:
-            business = await get_owned_business(
-                self.business_repo, command.business_id, command.current_user_id
+            employee = await self.employee_service.get_by_id_or_raise(command.employee_id)
+            await self.business_service.get_owned_business(
+                employee.business_id, command.current_user.id
             )
 
-            employee = await get_owned_employee(self.employee_repo, command.employee_id, business)
-
             employee.activate()
-            await self.employee_repo.update(employee)
+            await self.employee_service.update(employee)
             return employee
 
 
 @dataclass
 class DeactivateEmployeeUseCase:
     uow: AbstractUnitOfWork
-    business_repo: BusinessRepositoryPort
-    employee_repo: EmployeeRepositoryPort
+    employee_service: EmployeeService
+    business_service: BusinessServicePort
 
     async def execute(self, command: DeactivateEmployeeCommand) -> Employee:
         async with self.uow:
-            business = await get_owned_business(
-                self.business_repo, command.business_id, command.current_user_id
+            employee = await self.employee_service.get_by_id_or_raise(command.employee_id)
+            await self.business_service.get_owned_business(
+                employee.business_id, command.current_user.id
             )
 
-            employee = await get_owned_employee(self.employee_repo, command.employee_id, business)
-
             employee.deactivate()
-            await self.employee_repo.update(employee)
+            await self.employee_service.update(employee)
             return employee

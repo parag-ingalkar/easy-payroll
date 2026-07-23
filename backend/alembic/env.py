@@ -12,6 +12,7 @@ from app.features.auth.infrastructure.models import RefreshTokenModel, UserModel
 from app.features.business.infrastructure.models import BusinessModel  # noqa: F401
 from app.features.employee.infrastructure.models import EmployeeModel  # noqa: F401
 from app.features.holiday.infrastructure.models import HolidayModel  # noqa: F401
+from app.features.transaction.infrastructure.models import TransactionModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

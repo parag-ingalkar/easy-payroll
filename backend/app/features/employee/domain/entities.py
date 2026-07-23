@@ -112,13 +112,13 @@ class Employee:
     def deactivate(self):
         """Deactivate the employee."""
         if not self.is_active:
-            raise EmployeeAlreadyInactiveError("Employee is already inactive.")
+            raise EmployeeAlreadyInactiveError(employee_id=self.id)
         self.is_active = False
 
     def activate(self):
         """Activate the employee."""
         if self.is_active:
-            raise EmployeeAlreadyActiveError("Employee is already active.")
+            raise EmployeeAlreadyActiveError(employee_id=self.id)
         self.is_active = True
 
     def ensure_belongs_to_business(self, business_id: UUID):

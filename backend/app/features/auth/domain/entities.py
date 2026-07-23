@@ -33,6 +33,14 @@ class User:
         )
 
 
+@dataclass(slots=True, frozen=True)
+class CurrentUser:
+    id: UUID
+    email: str
+    name: str
+    roles: list[UserRole] = field(default_factory=lambda: [UserRole.OWNER])
+    
+
 @dataclass(slots=True)
 class RefreshToken:
     id: UUID
