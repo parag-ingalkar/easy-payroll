@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Protocol
 from uuid import UUID
 
@@ -13,6 +14,12 @@ class TransactionRepositoryPort(Protocol):
 
     async def get_all_by_employee_id(self, employee_id: UUID) -> list[Transaction]:
         """Fetches all transactions for a given employee ID."""
+        ...
+
+    async def get_by_employee_and_date_range(
+        self, employee_id: UUID, start_date: date, end_date: date
+    ) -> list[Transaction]:
+        """Fetches all transactions for an employee within a date range (inclusive)."""
         ...
 
     async def add(self, transaction: Transaction) -> None:
@@ -47,8 +54,6 @@ class EmployeeServicePort(Protocol):
     here — the consumer — per hexagonal/ports-and-adapters convention.
     """
 
-    async def get_owned_employee(
-        self, employee_id: UUID, business_id: UUID
-    ) -> Employee:
+    async def get_owned_employee(self, employee_id: UUID, business_id: UUID) -> Employee:
         """Fetch an employee and verify it belongs to the given business."""
         ...

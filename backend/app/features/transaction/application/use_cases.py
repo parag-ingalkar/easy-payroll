@@ -106,9 +106,7 @@ class GetTransactionsUseCase:
         business = await self.business_service.get_owned_business(
             command.business_id, command.current_user.id
         )
-        employee = await self.employee_service.get_owned_employee(
-            command.employee_id, business.id
-        )
+        employee = await self.employee_service.get_owned_employee(command.employee_id, business.id)
 
         return await self.transaction_service.get_all_by_employee_id(employee.id)
 
@@ -123,9 +121,7 @@ class GetTransactionUseCase:
         business = await self.business_service.get_owned_business(
             command.business_id, command.current_user.id
         )
-        employee = await self.employee_service.get_owned_employee(
-            command.employee_id, business.id
-        )
+        employee = await self.employee_service.get_owned_employee(command.employee_id, business.id)
 
         return await self.transaction_service.get_owned_transaction(
             command.transaction_id, employee

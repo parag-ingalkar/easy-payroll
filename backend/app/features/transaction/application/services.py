@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
 from app.features.employee.domain.entities import Employee
@@ -23,9 +24,7 @@ class TransactionService:
             raise TransactionNotFoundError(transaction_id=transaction_id)
         return transaction
 
-    async def get_owned_transaction(
-        self, transaction_id: UUID, employee: Employee
-    ) -> Transaction:
+    async def get_owned_transaction(self, transaction_id: UUID, employee: Employee) -> Transaction:
         """Fetch a transaction and verify it belongs to the given employee.
 
         Raises ``TransactionNotFoundError`` if the transaction does not exist,
@@ -38,6 +37,13 @@ class TransactionService:
 
     async def get_all_by_employee_id(self, employee_id: UUID) -> list[Transaction]:
         return await self.transaction_repo.get_all_by_employee_id(employee_id)
+
+    async def get_by_employee_and_date_range(
+        self, employee_id: UUID, start_date: date, end_date: date
+    ) -> list[Transaction]:
+        return await self.transaction_repo.get_by_employee_and_date_range(
+            employee_id, start_date, end_date
+        )
 
     async def add(self, transaction: Transaction) -> None:
         await self.transaction_repo.add(transaction)

@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import select
@@ -23,6 +24,22 @@ class SQLTransactionRepository(TransactionRepositoryPort):
             select(TransactionModel)
             .where(TransactionModel.employee_id == employee_id)
             .order_by(TransactionModel.transaction_date.desc())
+        )
+        transaction_models = result.scalars().all()
+        return [transaction_model.to_domain() for transaction_model in transaction_models]
+
+    async def get_by_employee_and_date_range(
+        self, employee_id: UUID, start_date: date, end_date: date
+    ) -> list[Transaction]:
+        """Fetches all transactions for an employee within a date range (inclusive)."""
+        result = await self.session.execute(
+            select(TransactionModel)
+            .where(
+                TransactionModel.employee_id == employee_id,
+                TransactionModel.transaction_date >= start_date,
+                TransactionModel.transaction_date <= end_date,
+            )
+            .order_by(TransactionModel.transaction_date.asc())
         )
         transaction_models = result.scalars().all()
         return [transaction_model.to_domain() for transaction_model in transaction_models]

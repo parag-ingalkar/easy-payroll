@@ -13,6 +13,7 @@ from app.features.employee.domain.exceptions import (
 )
 from app.features.employee.domain.value_objects import SalaryType
 from app.shared.enums import WeekDay
+from app.shared.utils import get_weekday
 
 
 @dataclass
@@ -42,7 +43,6 @@ class Employee:
     joining_date: date | None
     created_at: datetime
     is_active: bool
-
 
     @classmethod
     def create(
@@ -75,19 +75,20 @@ class Employee:
             created_at=datetime.now(),
             is_active=True,
         )
-    
-    def update(self,
-               *,
-                name: str | None = None,
-                salary_type: SalaryType | None = None,
-                base_rate: Decimal | None = None,
-                overtime_multiplier: Decimal | None = None,
-                weekly_off_days: Sequence[WeekDay] | None = None,
-                working_hours: Decimal | None = None,
-                phone: str | None = None,
-                designation: str | None = None,
-                joining_date: date | None = None,
-               ):
+
+    def update(
+        self,
+        *,
+        name: str | None = None,
+        salary_type: SalaryType | None = None,
+        base_rate: Decimal | None = None,
+        overtime_multiplier: Decimal | None = None,
+        weekly_off_days: Sequence[WeekDay] | None = None,
+        working_hours: Decimal | None = None,
+        phone: str | None = None,
+        designation: str | None = None,
+        joining_date: date | None = None,
+    ):
         """Update the employee entity with the given keyword arguments."""
         if name is not None:
             self.name = name
@@ -108,7 +109,6 @@ class Employee:
         if joining_date is not None:
             self.joining_date = joining_date
 
-    
     def deactivate(self):
         """Deactivate the employee."""
         if not self.is_active:
@@ -124,6 +124,7 @@ class Employee:
     def ensure_belongs_to_business(self, business_id: UUID):
         """Ensure that the employee belongs to the given business."""
         if self.business_id != business_id:
-            raise EmployeeNotOwnedError(
-                employee_id=self.id, business_id=business_id
-            )
+            raise EmployeeNotOwnedError(employee_id=self.id, business_id=business_id)
+
+    def is_date_weekly_off(self, date: date) -> bool:
+        return any(day == get_weekday(date) for day in self.weekly_off_days)

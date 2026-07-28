@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
 from app.features.auth.domain.entities import CurrentUser
@@ -9,6 +10,7 @@ from app.features.business.domain.exceptions import (
     BusinessNotFoundError,
     InsufficientPermissionsError,
 )
+from app.shared.utils import get_weekday
 
 
 class BusinessAuthorizationService:
@@ -66,3 +68,8 @@ class BusinessService:
             raise BusinessNotFoundError(business_id=business_id)
         business.ensure_owned_by(owner_id)
         return business
+
+    def is_date_weekly_off(self, business: Business, date: date) -> bool:
+        """Check if a given date is a weekly off for the business."""
+
+        return any(day == get_weekday(date) for day in business.default_weekly_off_days)
