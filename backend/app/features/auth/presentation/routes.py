@@ -13,7 +13,7 @@ from app.features.auth.application.use_cases import (
     LogoutUseCase,
     RefreshTokenUseCase,
 )
-from app.features.auth.domain.entities import User
+from app.features.auth.domain.entities import CurrentUser
 from app.features.auth.domain.exceptions import (
     InvalidTokenError,
 )
@@ -70,8 +70,6 @@ async def register_user(
         id=new_user.id,
         email=new_user.email,
         name=new_user.name,
-        created_at=new_user.created_at,
-        updated_at=new_user.updated_at,
         roles=new_user.roles,
     )
 
@@ -157,13 +155,11 @@ async def logout(
 
 @router.get("/users/me", response_model=UserResponse)
 async def current_user(
-    current_user: "User" = Depends(get_current_user),
+    current_user: "CurrentUser" = Depends(get_current_user),
 ):
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
         name=current_user.name,
-        created_at=current_user.created_at,
-        updated_at=current_user.updated_at,
         roles=current_user.roles,
     )

@@ -13,7 +13,7 @@ from app.features.auth.application.ports import (
     TokenServicePort,
     UserRepositoryPort,
 )
-from app.features.auth.domain.entities import RefreshToken, User
+from app.features.auth.domain.entities import CurrentUser, RefreshToken, User
 from app.features.auth.domain.exceptions import (
     InvalidAccessTokenError,
     InvalidCredentialsError,
@@ -39,7 +39,7 @@ class CreateUserUseCase:
         async with self.uow:
             existing_user = await self.user_repo.get_by_email(command.email)
             if existing_user:
-                raise UserAlreadyExistsError
+                raise UserAlreadyExistsError(email=command.email)
 
             new_user = User.create(
                 email=command.email,
@@ -143,7 +143,7 @@ class GetCurrentUserUseCase:
     user_repo: UserRepositoryPort
     token_service: TokenServicePort
 
-    async def execute(self, access_token: str) -> User:
+    async def execute(self, access_token: str) -> CurrentUser:
         claims = self.token_service.decode_access_token(access_token)
         if claims is None or claims.is_expired():
             raise InvalidAccessTokenError
@@ -152,4 +152,4 @@ class GetCurrentUserUseCase:
         if not user:
             raise InvalidAccessTokenError
 
-        return user
+        return CurrentUser(id=user.id, email=user.email, name=user.name, roles=user.roles)

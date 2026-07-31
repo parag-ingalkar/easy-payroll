@@ -13,8 +13,8 @@ class BusinessRepositoryPort(Protocol):
         """Fetches a business by its ID and owner ID."""
         ...
 
-    async def get_by_slug(self, slug: str) -> Business | None:
-        """Fetches a business by its slug."""
+    async def get_by_slug_and_owner(self, slug: str, owner_id: UUID) -> Business | None:
+        """Fetches a business by its slug and owner ID."""
         ...
 
     async def add(self, business: Business) -> None:
@@ -27,4 +27,8 @@ class BusinessRepositoryPort(Protocol):
 
     async def delete(self, business: Business) -> None:
         """Deletes a business from the repository."""
+        ...
+
+    async def list_by_owner(self, owner_id: UUID) -> list[Business]:
+        """Lists all businesses owned by a specific owner."""
         ...

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from app.features.auth.domain.entities import User
+from app.features.auth.domain.entities import CurrentUser
 from app.features.auth.presentation.dependencies import get_current_user
 from app.features.holiday.application.commands import (
     CreateHolidayCommand,
@@ -35,12 +35,12 @@ router = APIRouter()
 async def create_holiday(
     body: CreateHolidayRequest,
     business_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     use_case: CreateHolidayUseCase = Depends(get_create_holiday_use_case),
 ) -> HolidayResponse:
     command = CreateHolidayCommand(
+        current_user=current_user,
         business_id=business_id,
-        owner_id=current_user.id,
         holiday_date=body.holiday_date,
         name=body.name,
         holiday_type=body.holiday_type,
@@ -55,12 +55,12 @@ async def list_holidays(
     business_id: UUID,
     year: int | None = None,
     month: int | None = None,
-    current_user: User = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     use_case: ListHolidaysUseCase = Depends(get_list_holidays_use_case),
 ) -> list[HolidayResponse]:
     command = ListHolidaysCommand(
+        current_user=current_user,
         business_id=business_id,
-        owner_id=current_user.id,
         year=year,
         month=month,
     )
@@ -72,12 +72,12 @@ async def list_holidays(
 async def get_holiday(
     business_id: UUID,
     holiday_date: date,
-    current_user: User = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     use_case: GetHolidayUseCase = Depends(get_get_holiday_use_case),
 ) -> HolidayResponse:
     command = GetHolidayCommand(
+        current_user=current_user,
         business_id=business_id,
-        owner_id=current_user.id,
         holiday_date=holiday_date,
     )
     holiday = await use_case.execute(command)
@@ -88,12 +88,12 @@ async def get_holiday(
 async def delete_holiday(
     business_id: UUID,
     holiday_date: date,
-    current_user: User = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     use_case: DeleteHolidayUseCase = Depends(get_delete_holiday_use_case),
 ) -> None:
     command = DeleteHolidayCommand(
+        current_user=current_user,
         business_id=business_id,
-        owner_id=current_user.id,
         holiday_date=holiday_date,
     )
     await use_case.execute(command)

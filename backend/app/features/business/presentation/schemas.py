@@ -2,9 +2,15 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from app.features.business.domain.value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
+
+
+def _serialize_decimal(value: Decimal) -> float:
+    """Convert Decimal to float for JSON serialization."""
+    return float(value)
 
 
 class CreateBusinessRequest(BaseModel):
@@ -35,8 +41,13 @@ class BusinessResponse(BaseModel):
     id: UUID
     owner_id: UUID
     name: str
+    slug: str
     divisor_policy: DivisorPolicy
     default_overtime_multiplier: Decimal
     default_weekly_off_days: list[WeekDay]
     default_working_hours: Decimal
     created_at: datetime
+
+    @field_serializer("default_overtime_multiplier", "default_working_hours")
+    def serialize_decimals(self, value: Decimal) -> float:
+        return _serialize_decimal(value)

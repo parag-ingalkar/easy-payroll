@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -23,8 +22,6 @@ class LoginRequest(BaseModel):
 
 class UserResponse(UserBase):
     id: UUID
-    created_at: datetime
-    updated_at: datetime
     roles: list[UserRole]
 
     model_config = ConfigDict(from_attributes=True)

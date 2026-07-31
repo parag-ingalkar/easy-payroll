@@ -6,7 +6,9 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from .value_objects import DivisorPolicy, WeekDay
+from app.features.business.domain.exceptions import BusinessNotOwnedError
+from app.features.business.domain.value_objects import DivisorPolicy
+from app.shared.enums import WeekDay
 
 
 @dataclass
@@ -56,14 +58,22 @@ class Business:
 
     def update(self, **kwargs) -> None:
         """Update the business entity with the given keyword arguments."""
-        if "name" in kwargs:
+        if "name" in kwargs and kwargs["name"] is not None:
             self.name = kwargs["name"]
             self.slug = kwargs["name"].lower().replace(" ", "-")
-        if "divisor_policy" in kwargs:
+        if "divisor_policy" in kwargs and kwargs["divisor_policy"] is not None:
             self.divisor_policy = kwargs["divisor_policy"]
-        if "default_overtime_multiplier" in kwargs:
+        if (
+            "default_overtime_multiplier" in kwargs
+            and kwargs["default_overtime_multiplier"] is not None
+        ):
             self.default_overtime_multiplier = kwargs["default_overtime_multiplier"]
-        if "default_weekly_off_days" in kwargs:
+        if "default_weekly_off_days" in kwargs and kwargs["default_weekly_off_days"] is not None:
             self.default_weekly_off_days = kwargs["default_weekly_off_days"]
-        if "default_working_hours" in kwargs:
+        if "default_working_hours" in kwargs and kwargs["default_working_hours"] is not None:
             self.default_working_hours = kwargs["default_working_hours"]
+
+    def ensure_owned_by(self, user_id: UUID) -> None:
+        """Ensure that the business is owned by the given user ID."""
+        if self.owner_id != user_id:
+            raise BusinessNotOwnedError(business_id=self.id, owner_id=self.owner_id)
