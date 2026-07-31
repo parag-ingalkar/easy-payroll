@@ -57,6 +57,7 @@ def get_create_payroll_run_use_case(
     return CreatePayrollRunUseCase(
         uow=SQLAlchemyUnitOfWork(db_session),
         payroll_service=payroll_service,
+        payroll_repo=SQLPayrollRepository(db_session),
         business_service=business_service,
         employee_service=employee_service,
         attendance_service=attendance_service,

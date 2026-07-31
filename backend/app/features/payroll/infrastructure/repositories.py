@@ -69,6 +69,13 @@ class SQLPayrollRepository(PayrollRepositoryPort):
         await self.session.merge(PayrollRunModel.from_domain(run))
         await self.session.flush()
 
+    async def delete_run(self, run: PayrollRun) -> None:
+        """Delete a payroll run and its associated line items and warnings."""
+        model = await self.session.get(PayrollRunModel, run.id)
+        if model:
+            await self.session.delete(model)
+            await self.session.flush()
+
     async def add_line_items(self, line_items: Sequence[PayrollLineItem]) -> None:
         """Persist all line items for a run."""
         self.session.add_all([PayrollLineItemModel.from_domain(item) for item in line_items])

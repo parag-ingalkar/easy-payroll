@@ -25,6 +25,7 @@ from app.features.payroll.application.ports import (
     BusinessServicePort,
     EmployeeServicePort,
     HolidayServicePort,
+    PayrollRepositoryPort,
     TransactionServicePort,
 )
 from app.features.payroll.application.services import PayrollService
@@ -40,6 +41,7 @@ from app.features.payroll.domain.services import (
     sum_transactions,
     summarize_attendance,
 )
+from app.features.payroll.domain.value_objects import PayrollStatus
 
 
 @dataclass
@@ -53,10 +55,16 @@ class PayrollRunResult:
 
 @dataclass
 class CreatePayrollRunUseCase:
-    """Compute and persist a payroll run for a business for a (year, month)."""
+    """Compute and persist a payroll run for a business for a (year, month).
+
+    If a DRAFT payroll run already exists for the period, it is deleted and
+    replaced with a fresh calculation. This enables "re-running" payroll in
+    draft state.
+    """
 
     uow: AbstractUnitOfWork
     payroll_service: PayrollService
+    payroll_repo: PayrollRepositoryPort
     business_service: BusinessServicePort
     employee_service: EmployeeServicePort
     attendance_service: AttendanceServicePort
@@ -74,9 +82,13 @@ class CreatePayrollRunUseCase:
                 business.id, command.year, command.month
             )
             if existing is not None:
-                raise PayrollRunAlreadyExistsError(
-                    business_id=business.id, year=command.year, month=command.month
-                )
+                # Allow re-run only if the existing run is in DRAFT state
+                if existing.status != PayrollStatus.DRAFT:
+                    raise PayrollRunAlreadyExistsError(
+                        business_id=business.id, year=command.year, month=command.month
+                    )
+                # Delete the existing draft run and its associated data
+                await self.payroll_repo.delete_run(existing)
 
             start_date, end_date = _month_bounds(command.year, command.month)
 

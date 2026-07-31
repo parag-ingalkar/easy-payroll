@@ -40,6 +40,10 @@ class PayrollRepositoryPort(Protocol):
         """Update an existing payroll run (e.g. totals, status)."""
         ...
 
+    async def delete_run(self, run: PayrollRun) -> None:
+        """Delete a payroll run and its associated line items and warnings."""
+        ...
+
     async def add_line_items(self, line_items: Sequence[PayrollLineItem]) -> None:
         """Persist all line items for a run."""
         ...
