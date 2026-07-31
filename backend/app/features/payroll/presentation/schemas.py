@@ -4,13 +4,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from app.features.payroll.domain.value_objects import (
     PaymentMethod,
     PayrollStatus,
     PayrollWarningType,
 )
+
+
+def _serialize_decimal(value: Decimal) -> float:
+    """Convert Decimal to float for JSON serialization."""
+    return float(value)
 
 
 class CreatePayrollRunRequest(BaseModel):
@@ -63,6 +68,24 @@ class PayrollLineItemResponse(BaseModel):
     paid_via: str | None
     paid_date: date | None
 
+    @field_serializer(
+        "base_rate",
+        "overtime_multiplier_used",
+        "working_hours_used",
+        "present_days",
+        "half_days",
+        "paid_leave_days",
+        "unpaid_leave_days",
+        "overtime_hours",
+        "earned_salary",
+        "overtime_pay",
+        "total_additions",
+        "total_deductions",
+        "net_payable",
+    )
+    def serialize_decimals(self, value: Decimal) -> float:
+        return _serialize_decimal(value)
+
 
 class PayrollRunResponse(BaseModel):
     """A payroll run summary plus its nested line items and warnings."""
@@ -81,3 +104,7 @@ class PayrollRunResponse(BaseModel):
     line_items: list[PayrollLineItemResponse] = Field(default_factory=list)
     warnings: list[PayrollWarningResponse] = Field(default_factory=list)
     is_paid: bool = Field(default=False, description="True if all line items are paid")
+
+    @field_serializer("total_amount_due")
+    def serialize_total_amount_due(self, value: Decimal) -> float:
+        return _serialize_decimal(value)

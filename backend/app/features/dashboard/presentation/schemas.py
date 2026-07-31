@@ -2,7 +2,12 @@
 
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
+
+
+def _serialize_decimal(value: Decimal) -> float:
+    """Convert Decimal to float for JSON serialization."""
+    return float(value)
 
 
 class TrendDay(BaseModel):
@@ -20,12 +25,20 @@ class PayrollMonth(BaseModel):
     total: Decimal
     paid: Decimal
 
+    @field_serializer("total", "paid")
+    def serialize_decimals(self, value: Decimal) -> float:
+        return _serialize_decimal(value)
+
 
 class PayrollInfo(BaseModel):
     status: str
     total_payable: Decimal
     paid_count: int
     total_count: int
+
+    @field_serializer("total_payable")
+    def serialize_total_payable(self, value: Decimal) -> float:
+        return _serialize_decimal(value)
 
 
 class DashboardResponse(BaseModel):
@@ -47,3 +60,12 @@ class DashboardResponse(BaseModel):
     payroll_history: list[PayrollMonth]
     projected_monthly_cost: Decimal
     ytd_paid: Decimal
+
+    @field_serializer(
+        "monthly_additions",
+        "monthly_deductions",
+        "projected_monthly_cost",
+        "ytd_paid",
+    )
+    def serialize_decimals(self, value: Decimal) -> float:
+        return _serialize_decimal(value)

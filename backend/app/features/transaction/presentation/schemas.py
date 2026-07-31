@@ -4,9 +4,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from app.features.transaction.domain.value_objects import TransactionType
+
+
+def _serialize_decimal(value: Decimal) -> float:
+    """Convert Decimal to float for JSON serialization."""
+    return float(value)
 
 
 class CreateTransactionRequest(BaseModel):
@@ -35,3 +40,7 @@ class TransactionResponse(BaseModel):
     amount: Decimal
     description: str
     created_at: datetime
+
+    @field_serializer("amount")
+    def serialize_amount(self, value: Decimal) -> float:
+        return _serialize_decimal(value)

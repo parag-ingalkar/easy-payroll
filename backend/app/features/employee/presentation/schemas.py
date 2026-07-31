@@ -4,10 +4,15 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from app.features.employee.domain.value_objects import SalaryType
 from app.shared.enums import WeekDay
+
+
+def _serialize_decimal(value: Decimal) -> float:
+    """Convert Decimal to float for JSON serialization."""
+    return float(value)
 
 
 class CreateEmployeeRequest(BaseModel):
@@ -52,3 +57,7 @@ class EmployeeResponse(BaseModel):
     joining_date: date | None
     is_active: bool
     created_at: datetime
+
+    @field_serializer("base_rate", "overtime_multiplier", "working_hours")
+    def serialize_decimals(self, value: Decimal) -> float:
+        return _serialize_decimal(value)
