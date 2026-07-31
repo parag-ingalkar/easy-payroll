@@ -27,9 +27,7 @@ class EmployeeService:
             raise EmployeeNotFoundError(employee_id=employee_id)
         return employee
 
-    async def get_owned_employee(
-        self, employee_id: UUID, business_id: UUID
-    ) -> Employee:
+    async def get_owned_employee(self, employee_id: UUID, business_id: UUID) -> Employee:
         """Fetch an employee and verify it belongs to the given business.
 
         Raises ``EmployeeNotFoundError`` if the employee does not exist, and
@@ -40,9 +38,7 @@ class EmployeeService:
         employee.ensure_belongs_to_business(business_id)
         return employee
 
-    async def get_by_business_and_name(
-        self, business_id: UUID, name: str
-    ) -> Employee | None:
+    async def get_by_business_and_name(self, business_id: UUID, name: str) -> Employee | None:
         return await self.employee_repo.get_by_business_id_and_name(business_id, name)
 
     async def add(self, employee: Employee) -> None:

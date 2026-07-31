@@ -152,9 +152,4 @@ class GetCurrentUserUseCase:
         if not user:
             raise InvalidAccessTokenError
 
-        return CurrentUser(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            roles=user.roles
-        )
+        return CurrentUser(id=user.id, email=user.email, name=user.name, roles=user.roles)

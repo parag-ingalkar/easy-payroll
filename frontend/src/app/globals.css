@@ -1,0 +1,272 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* PagarPal brand palette — primary token kept as --jungle-teal for class compat */
+  --color-graphite: var(--graphite);
+  --color-jungle-teal: var(--jungle-teal);
+  --color-porcelain: var(--porcelain);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/*
+ * PagarPal color system — OKLCH, derived from an indigo primary + porcelain.
+ *
+ * The primary is a deep business indigo (hue 265°) — the hue family of trust,
+ * finance, and professional authority (Stripe, Linear, banking). It replaces
+ * the previous green accent, which read as "eco/wellness" rather than
+ * "business/finance". All neutrals carry a faint cool-blue tint at the brand
+ * hue so surfaces and accent share a family.
+ *
+ *   primary     oklch(48% 0.14 265)   — indigo, the action color
+ *   porcelain   oklch(99.4% 0.005 240) — card surface (light)
+ *   graphite    oklch(32% 0.000 0)    — primary text
+ *
+ * Neutrals tinted from 265° at very low chroma, dropping to zero near black
+ * (per impeccable: reduce chroma near extremes). Dark mode is composed
+ * explicitly — deep cool slate with a brightened indigo accent — not a
+ * mechanical inversion of the light theme.
+ *
+ * NOTE: the CSS var is still named --jungle-teal and the utility class
+ * bg-jungle-teal still works, but the value is now indigo. This avoids
+ * touching 300+ component files. A later refactor can rename the token.
+ */
+
+:root {
+  --radius: 0.875rem;
+
+  /* Brand anchors — primary is now indigo, token name kept for compat */
+  --jungle-teal: oklch(48% 0.14 265);
+  --porcelain: oklch(99.4% 0.005 240);
+  --graphite: oklch(32% 0.000 0);
+
+  /* Light surfaces — faint cool-blue neutrals at brand hue */
+  --background: oklch(97.5% 0.008 265);       /* canvas: cool off-white, indigo tint */
+  --foreground: oklch(32% 0.000 0);           /* graphite text */
+  --card: oklch(99.4% 0.005 240);             /* porcelain cards */
+  --card-foreground: oklch(32% 0.000 0);
+  --popover: oklch(99.4% 0.005 240);
+  --popover-foreground: oklch(32% 0.000 0);
+
+  /* Primary action — indigo */
+  --primary: oklch(48% 0.14 265);
+  --primary-foreground: oklch(99% 0.004 240);
+
+  /* Secondary / muted — cool neutrals one step below canvas */
+  --secondary: oklch(93% 0.012 265);
+  --secondary-foreground: oklch(32% 0.000 0);
+  --muted: oklch(95% 0.010 265);
+  --muted-foreground: oklch(50% 0.014 265);
+
+  /* Accent — light indigo tint for selections/hover */
+  --accent: oklch(92% 0.035 265);
+  --accent-foreground: oklch(38% 0.09 265);
+
+  /* Semantic */
+  --destructive: oklch(55% 0.190 25);
+  --border: oklch(90% 0.014 265);
+  --input: oklch(90% 0.014 265);
+  --ring: oklch(48% 0.14 265);
+
+  /* Data viz — indigo family + one warm contrast */
+  --chart-1: oklch(48% 0.14 265);             /* indigo */
+  --chart-2: oklch(62% 0.11 265);             /* lighter indigo */
+  --chart-3: oklch(38% 0.10 265);             /* deeper indigo */
+  --chart-4: oklch(72% 0.110 50);             /* warm contrast (gold) */
+  --chart-5: oklch(58% 0.080 200);            /* slate-blue */
+
+  --sidebar: oklch(99.4% 0.005 240);
+  --sidebar-foreground: oklch(32% 0.000 0);
+  --sidebar-primary: oklch(48% 0.14 265);
+  --sidebar-primary-foreground: oklch(99% 0.004 240);
+  --sidebar-accent: oklch(92% 0.035 265);
+  --sidebar-accent-foreground: oklch(38% 0.09 265);
+  --sidebar-border: oklch(90% 0.014 265);
+  --sidebar-ring: oklch(48% 0.14 265);
+}
+
+/*
+ * Dark mode — composed, not inverted.
+ * Deep cool slate surfaces with a subtle indigo tint; the accent brightens
+ * to maintain contrast on dark. Text is a warm near-white (not pure white)
+ * to reduce glare. Elevation goes lighter as it rises.
+ */
+.dark {
+  --jungle-teal: oklch(68% 0.12 265);         /* brightened indigo for dark contrast */
+  --porcelain: oklch(22% 0.010 265);          /* card surface in dark */
+  --graphite: oklch(90% 0.004 240);
+
+  --background: oklch(17% 0.008 265);         /* deepest canvas */
+  --foreground: oklch(92% 0.004 240);         /* warm near-white */
+  --card: oklch(21% 0.010 265);               /* raised surface */
+  --card-foreground: oklch(92% 0.004 240);
+  --popover: oklch(23% 0.010 265);
+  --popover-foreground: oklch(92% 0.004 240);
+
+  --primary: oklch(68% 0.12 265);             /* brightened indigo */
+  --primary-foreground: oklch(15% 0.008 265);
+
+  --secondary: oklch(26% 0.010 265);
+  --secondary-foreground: oklch(92% 0.004 240);
+  --muted: oklch(25% 0.010 265);
+  --muted-foreground: oklch(68% 0.012 265);
+
+  --accent: oklch(28% 0.045 265);             /* deeper tint for dark */
+  --accent-foreground: oklch(85% 0.035 265);
+
+  --destructive: oklch(68% 0.180 25);
+  --border: oklch(29% 0.012 265);
+  --input: oklch(29% 0.012 265);
+  --ring: oklch(68% 0.12 265);
+
+  --chart-1: oklch(68% 0.12 265);
+  --chart-2: oklch(75% 0.10 265);
+  --chart-3: oklch(58% 0.10 265);
+  --chart-4: oklch(75% 0.110 50);
+  --chart-5: oklch(62% 0.080 200);
+
+  --sidebar: oklch(21% 0.010 265);
+  --sidebar-foreground: oklch(92% 0.004 240);
+  --sidebar-primary: oklch(68% 0.12 265);
+  --sidebar-primary-foreground: oklch(15% 0.008 265);
+  --sidebar-accent: oklch(28% 0.045 265);
+  --sidebar-accent-foreground: oklch(85% 0.035 265);
+  --sidebar-border: oklch(29% 0.012 265);
+  --sidebar-ring: oklch(68% 0.12 265);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Custom scrollbar */
+.scroll-area-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-area-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-area-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+.scroll-area-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Hide scrollbar for horizontal strips */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Subtle entrance animation */
+@keyframes pp-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pp-animate-in {
+  animation: pp-fade-up 0.35s ease-out both;
+}
+
+/* Shimmer skeleton */
+@keyframes pp-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--accent) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: pp-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Stagger helpers */
+.pp-stagger > * {
+  animation: pp-fade-up 0.4s ease-out both;
+}
+.pp-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.pp-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.pp-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.pp-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.pp-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.pp-stagger > *:nth-child(6) { animation-delay: 250ms; }
+
+/* Pressable feedback */
+.pp-pressable {
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.pp-pressable:active {
+  transform: scale(0.97);
+}
+
+/* Splash loader — exponential ease-out pulse (no bounce) */
+@keyframes pp-pulse-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.pp-pulse-dot {
+  animation: pp-pulse-dot 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .pp-animate-in,
+  .pp-stagger > *,
+  .shimmer,
+  .pp-pulse-dot {
+    animation: none !important;
+  }
+}

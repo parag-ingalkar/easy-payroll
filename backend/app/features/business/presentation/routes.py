@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from app.features.auth.domain.entities import CurrentUser, User
+from app.features.auth.domain.entities import CurrentUser
 from app.features.auth.presentation.dependencies import get_current_user
 from app.features.business.application.commands import (
     CreateBusinessCommand,

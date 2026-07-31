@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from uuid import UUID
 
 from app.core.uow import AbstractUnitOfWork
 from app.features.attendance.application.commands import (

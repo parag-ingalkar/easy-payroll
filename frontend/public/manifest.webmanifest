@@ -1,0 +1,25 @@
+{
+  "name": "PagarPal — Payroll & Attendance",
+  "short_name": "PagarPal",
+  "description": "Manage employee attendance, advances, bonuses and automate monthly payroll for your small business.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efe5dc",
+  "theme_color": "#668f80",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ from app.features.auth.application.use_cases import (
     LogoutUseCase,
     RefreshTokenUseCase,
 )
-from app.features.auth.domain.entities import CurrentUser, User
+from app.features.auth.domain.entities import CurrentUser
 from app.features.auth.domain.exceptions import (
     InvalidTokenError,
 )

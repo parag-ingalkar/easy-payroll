@@ -61,9 +61,7 @@ class DeleteHolidayUseCase:
                 command.business_id, command.current_user.id
             )
 
-            holiday = await self.holiday_service.get_or_raise(
-                business.id, command.holiday_date
-            )
+            holiday = await self.holiday_service.get_or_raise(business.id, command.holiday_date)
 
             await self.holiday_service.delete(holiday)
 
@@ -93,6 +91,4 @@ class ListHolidaysUseCase:
             command.business_id, command.current_user.id
         )
 
-        return await self.holiday_service.list_by_business(
-            business.id, command.year, command.month
-        )
+        return await self.holiday_service.list_by_business(business.id, command.year, command.month)

@@ -17,6 +17,8 @@ from app.features.payroll.application.commands import (
     FinalizePayrollRunCommand,
     GetPayrollRunCommand,
     ListPayrollRunsCommand,
+    MarkAllPaidCommand,
+    MarkLineItemPaidCommand,
 )
 from app.features.payroll.application.ports import (
     AttendanceServicePort,
@@ -192,6 +194,59 @@ class FinalizePayrollRunUseCase:
             run.finalize()
             await self.payroll_service.update_run(run)
             return run
+
+
+@dataclass
+class MarkLineItemPaidUseCase:
+    """Mark a single payroll line item as paid."""
+
+    uow: AbstractUnitOfWork
+    payroll_service: PayrollService
+    business_service: BusinessServicePort
+
+    async def execute(self, command: MarkLineItemPaidCommand) -> PayrollRunResult:
+        async with self.uow:
+            business = await self.business_service.get_owned_business(
+                command.business_id, command.current_user.id
+            )
+            run = await self.payroll_service.get_run_by_id_or_raise(command.payroll_id)
+            run.ensure_owned_by_business(business.id)
+
+            item = await self.payroll_service.get_line_item_by_id_or_raise(command.line_item_id)
+            item.mark_paid(method=command.paid_via, paid_date=command.paid_date)
+
+            await self.payroll_service.update_line_items([item])
+
+            # Return the full run with line items and warnings
+            line_items = await self.payroll_service.list_line_items(run.id)
+            warnings = await self.payroll_service.list_warnings(run.id)
+            return PayrollRunResult(run=run, line_items=line_items, warnings=warnings)
+
+
+@dataclass
+class MarkAllPaidUseCase:
+    """Mark every line item in a payroll run as paid with the same method."""
+
+    uow: AbstractUnitOfWork
+    payroll_service: PayrollService
+    business_service: BusinessServicePort
+
+    async def execute(self, command: MarkAllPaidCommand) -> PayrollRunResult:
+        async with self.uow:
+            business = await self.business_service.get_owned_business(
+                command.business_id, command.current_user.id
+            )
+            run = await self.payroll_service.get_run_by_id_or_raise(command.payroll_id)
+            run.ensure_owned_by_business(business.id)
+
+            line_items = await self.payroll_service.list_line_items(run.id)
+            for item in line_items:
+                item.mark_paid(method=command.paid_via, paid_date=command.paid_date)
+
+            await self.payroll_service.update_line_items(line_items)
+
+            warnings = await self.payroll_service.list_warnings(run.id)
+            return PayrollRunResult(run=run, line_items=line_items, warnings=warnings)
 
 
 def _month_bounds(year: int, month: int) -> tuple[date, date]:

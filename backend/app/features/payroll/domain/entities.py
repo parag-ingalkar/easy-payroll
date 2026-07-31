@@ -8,9 +8,11 @@ from uuid import UUID, uuid4
 
 from app.features.payroll.domain.exceptions import (
     PayrollAlreadyFinalizedError,
+    PayrollLineItemAlreadyPaidError,
     PayrollRunNotOwnedError,
 )
 from app.features.payroll.domain.value_objects import (
+    PaymentMethod,
     PayrollStatus,
     PayrollWarningType,
 )
@@ -169,6 +171,18 @@ class PayrollLineItem:
             paid_via=paid_via,
             paid_date=paid_date,
         )
+
+    def mark_paid(self, *, method: PaymentMethod, paid_date: date) -> None:
+        """Transition the line item to ``PAID`` with a payment method and date.
+
+        Allowed from ``DRAFT`` or ``FINALIZED``; a line item already ``PAID``
+        raises :class:`PayrollLineItemAlreadyPaidError`.
+        """
+        if self.status == PayrollStatus.PAID:
+            raise PayrollLineItemAlreadyPaidError(line_item_id=self.id)
+        self.status = PayrollStatus.PAID
+        self.paid_via = method.value
+        self.paid_date = paid_date
 
 
 @dataclass

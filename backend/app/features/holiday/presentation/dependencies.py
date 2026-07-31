@@ -42,9 +42,7 @@ def get_list_holidays_use_case(
 ):
     holiday_service = HolidayService(SQLHolidaysRepository(db_session))
     business_service = BusinessService(SQLBusinessRepository(db_session))
-    return ListHolidaysUseCase(
-        holiday_service=holiday_service, business_service=business_service
-    )
+    return ListHolidaysUseCase(holiday_service=holiday_service, business_service=business_service)
 
 
 def get_get_holiday_use_case(
@@ -52,6 +50,4 @@ def get_get_holiday_use_case(
 ):
     holiday_service = HolidayService(SQLHolidaysRepository(db_session))
     business_service = BusinessService(SQLBusinessRepository(db_session))
-    return GetHolidayUseCase(
-        holiday_service=holiday_service, business_service=business_service
-    )
+    return GetHolidayUseCase(holiday_service=holiday_service, business_service=business_service)

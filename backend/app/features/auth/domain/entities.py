@@ -39,7 +39,7 @@ class CurrentUser:
     email: str
     name: str
     roles: list[UserRole] = field(default_factory=lambda: [UserRole.OWNER])
-    
+
 
 @dataclass(slots=True)
 class RefreshToken:

@@ -6,12 +6,21 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.features.payroll.domain.value_objects import PayrollStatus, PayrollWarningType
+from app.features.payroll.domain.value_objects import (
+    PaymentMethod,
+    PayrollStatus,
+    PayrollWarningType,
+)
 
 
 class CreatePayrollRunRequest(BaseModel):
     month: int = Field(..., ge=1, le=12)
     year: int = Field(..., ge=1900, le=9999)
+
+
+class MarkPaidRequest(BaseModel):
+    paid_via: PaymentMethod
+    paid_date: date | None = None
 
 
 class PayrollWarningResponse(BaseModel):
@@ -71,3 +80,4 @@ class PayrollRunResponse(BaseModel):
     updated_at: datetime
     line_items: list[PayrollLineItemResponse] = Field(default_factory=list)
     warnings: list[PayrollWarningResponse] = Field(default_factory=list)
+    is_paid: bool = Field(default=False, description="True if all line items are paid")

@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "http://localhost:3000"
 
 
 @lru_cache

@@ -52,7 +52,7 @@ class SQLEmployeeRepository(EmployeeRepositoryPort):
         """Fetches all employees for a given business ID."""
         query = select(EmployeeModel).where(EmployeeModel.business_id == business_id)
         if not include_inactive:
-            query = query.where(EmployeeModel.is_active == True)
+            query = query.where(EmployeeModel.is_active)
 
         result = await self.session.execute(query)
         employees_models = result.scalars().all()

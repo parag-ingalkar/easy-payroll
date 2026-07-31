@@ -88,6 +88,17 @@ class SQLPayrollRepository(PayrollRepositoryPort):
         )
         return [model.to_domain() for model in result.scalars().all()]
 
+    async def get_line_item_by_id(self, line_item_id: UUID) -> PayrollLineItem | None:
+        """Fetch a single line item by id."""
+        result = await self.session.get(PayrollLineItemModel, line_item_id)
+        return result.to_domain() if result else None
+
+    async def update_line_items(self, line_items: Sequence[PayrollLineItem]) -> None:
+        """Update existing line items (e.g. mark paid)."""
+        for item in line_items:
+            await self.session.merge(PayrollLineItemModel.from_domain(item))
+        await self.session.flush()
+
     async def list_warnings(self, run_id: UUID) -> Sequence[PayrollWarning]:
         """List all warnings attached to a run's line items.
 

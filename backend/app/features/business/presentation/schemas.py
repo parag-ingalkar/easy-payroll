@@ -36,6 +36,7 @@ class BusinessResponse(BaseModel):
     id: UUID
     owner_id: UUID
     name: str
+    slug: str
     divisor_policy: DivisorPolicy
     default_overtime_multiplier: Decimal
     default_weekly_off_days: list[WeekDay]

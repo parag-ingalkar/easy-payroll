@@ -42,6 +42,7 @@ def get_delete_business_use_case(
     business_service = BusinessService(SQLBusinessRepository(db_session))
     return DeleteBusinessUseCase(uow=uow, business_service=business_service)
 
+
 def get_list_businesses_use_case(
     db_session: AsyncSession = Depends(get_db),
 ):
@@ -58,7 +59,7 @@ async def verify_business_ownership(
     business_service = BusinessService(SQLBusinessRepository(session))
     business = await business_service.get_by_id(business_id)
     if not business:
-        raise BusinessNotFoundError
+        raise BusinessNotFoundError(business_id)
     if business.owner_id != current_user.id:
-        raise BusinessNotOwnedError
+        raise BusinessNotOwnedError(business_id, current_user.id)
     return business

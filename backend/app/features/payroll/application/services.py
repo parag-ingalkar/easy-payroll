@@ -8,7 +8,10 @@ from app.features.payroll.domain.entities import (
     PayrollRun,
     PayrollWarning,
 )
-from app.features.payroll.domain.exceptions import PayrollRunNotFoundError
+from app.features.payroll.domain.exceptions import (
+    PayrollLineItemNotFoundError,
+    PayrollRunNotFoundError,
+)
 
 
 @dataclass
@@ -46,6 +49,16 @@ class PayrollService:
 
     async def list_line_items(self, run_id: UUID) -> Sequence[PayrollLineItem]:
         return await self.payroll_repo.list_line_items(run_id)
+
+    async def get_line_item_by_id_or_raise(self, line_item_id: UUID) -> PayrollLineItem:
+        """Fetch a line item by id, raising ``PayrollLineItemNotFoundError`` if absent."""
+        item = await self.payroll_repo.get_line_item_by_id(line_item_id)
+        if not item:
+            raise PayrollLineItemNotFoundError(line_item_id=line_item_id)
+        return item
+
+    async def update_line_items(self, line_items: Sequence[PayrollLineItem]) -> None:
+        await self.payroll_repo.update_line_items(line_items)
 
     async def list_warnings(self, run_id: UUID) -> Sequence[PayrollWarning]:
         return await self.payroll_repo.list_warnings(run_id)

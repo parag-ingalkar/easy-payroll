@@ -52,6 +52,14 @@ class PayrollRepositoryPort(Protocol):
         """List line items for a run."""
         ...
 
+    async def get_line_item_by_id(self, line_item_id: UUID) -> PayrollLineItem | None:
+        """Fetch a single line item by id."""
+        ...
+
+    async def update_line_items(self, line_items: Sequence[PayrollLineItem]) -> None:
+        """Update existing line items (e.g. mark paid)."""
+        ...
+
     async def list_warnings(self, run_id: UUID) -> Sequence[PayrollWarning]:
         """List all warnings attached to a run's line items."""
         ...

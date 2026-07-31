@@ -17,6 +17,8 @@ from app.features.payroll.application.use_cases import (
     FinalizePayrollRunUseCase,
     GetPayrollRunUseCase,
     ListPayrollRunsUseCase,
+    MarkAllPaidUseCase,
+    MarkLineItemPaidUseCase,
 )
 from app.features.payroll.infrastructure.repositories import SQLPayrollRepository
 from app.features.transaction.application.services import TransactionService
@@ -88,6 +90,28 @@ def get_finalize_payroll_run_use_case(
 ):
     payroll_service, business_service, *_ = _services(db_session)
     return FinalizePayrollRunUseCase(
+        uow=SQLAlchemyUnitOfWork(db_session),
+        payroll_service=payroll_service,
+        business_service=business_service,
+    )
+
+
+def get_mark_line_item_paid_use_case(
+    db_session: AsyncSession = Depends(get_db),
+):
+    payroll_service, business_service, *_ = _services(db_session)
+    return MarkLineItemPaidUseCase(
+        uow=SQLAlchemyUnitOfWork(db_session),
+        payroll_service=payroll_service,
+        business_service=business_service,
+    )
+
+
+def get_mark_all_paid_use_case(
+    db_session: AsyncSession = Depends(get_db),
+):
+    payroll_service, business_service, *_ = _services(db_session)
+    return MarkAllPaidUseCase(
         uow=SQLAlchemyUnitOfWork(db_session),
         payroll_service=payroll_service,
         business_service=business_service,

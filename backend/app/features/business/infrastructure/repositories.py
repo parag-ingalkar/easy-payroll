@@ -30,7 +30,9 @@ class SQLBusinessRepository(BusinessRepositoryPort):
     async def get_by_slug_and_owner(self, slug: str, owner_id: UUID) -> Business | None:
         """Fetches a business by its slug and owner ID."""
         result = await self.session.execute(
-            select(BusinessModel).where(BusinessModel.slug == slug, BusinessModel.owner_id == owner_id)
+            select(BusinessModel).where(
+                BusinessModel.slug == slug, BusinessModel.owner_id == owner_id
+            )
         )
         business_model = result.scalar_one_or_none()
         return business_model.to_domain() if business_model else None
@@ -55,6 +57,8 @@ class SQLBusinessRepository(BusinessRepositoryPort):
         await self.session.delete(model)
 
     async def list_by_owner(self, owner_id: UUID) -> list[Business]:
-        result = await self.session.execute(select(BusinessModel).where(BusinessModel.owner_id == owner_id))
+        result = await self.session.execute(
+            select(BusinessModel).where(BusinessModel.owner_id == owner_id)
+        )
         businesses = result.scalars()
         return [business.to_domain() for business in businesses]

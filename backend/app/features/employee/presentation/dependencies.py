@@ -1,4 +1,3 @@
-
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,9 +56,7 @@ def get_get_employee_use_case(
 ):
     employee_service = EmployeeService(SQLEmployeeRepository(db_session))
     business_service = BusinessService(SQLBusinessRepository(db_session))
-    return GetEmployeeUseCase(
-        employee_service=employee_service, business_service=business_service
-    )
+    return GetEmployeeUseCase(employee_service=employee_service, business_service=business_service)
 
 
 def get_get_employees_use_case(
@@ -67,9 +64,7 @@ def get_get_employees_use_case(
 ):
     employee_service = EmployeeService(SQLEmployeeRepository(db_session))
     business_service = BusinessService(SQLBusinessRepository(db_session))
-    return GetEmployeesUseCase(
-        employee_service=employee_service, business_service=business_service
-    )
+    return GetEmployeesUseCase(employee_service=employee_service, business_service=business_service)
 
 
 def get_activate_employee_use_case(

@@ -17,13 +17,9 @@ class HolidayService:
 
     holiday_repo: HolidaysRepositoryPort
 
-    async def get_or_raise(
-        self, business_id: UUID, holiday_date: date
-    ) -> Holiday:
+    async def get_or_raise(self, business_id: UUID, holiday_date: date) -> Holiday:
         """Fetch a holiday, raising ``HolidayNotFoundError`` if absent."""
-        holiday = await self.holiday_repo.get_by_business_id_and_date(
-            business_id, holiday_date
-        )
+        holiday = await self.holiday_repo.get_by_business_id_and_date(business_id, holiday_date)
         if not holiday:
             raise HolidayNotFoundError(business_id, holiday_date)
         return holiday
@@ -31,9 +27,7 @@ class HolidayService:
     async def get_by_business_and_date(
         self, business_id: UUID, holiday_date: date
     ) -> Holiday | None:
-        return await self.holiday_repo.get_by_business_id_and_date(
-            business_id, holiday_date
-        )
+        return await self.holiday_repo.get_by_business_id_and_date(business_id, holiday_date)
 
     async def add(self, holiday: Holiday) -> None:
         await self.holiday_repo.add(holiday)
@@ -47,6 +41,4 @@ class HolidayService:
         year: int | None = None,
         month: int | None = None,
     ) -> Sequence[Holiday]:
-        return await self.holiday_repo.list_by_business(
-            business_id, year=year, month=month
-        )
+        return await self.holiday_repo.list_by_business(business_id, year=year, month=month)
